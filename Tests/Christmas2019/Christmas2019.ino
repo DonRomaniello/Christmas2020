@@ -8,16 +8,66 @@
 
 Timer t;
 
-#define NUM_STRIPS 3
-#define NUM_LEDS_PER_STRIP 100
-#define NUM_LEDS NUM_LEDS_PER_STRIP * NUM_STRIPS
-#define LED_TYPE    WS2811
 #define COLOR_CORRECTION Candle
 #define BRIGHTNESS  32
 
-#define FPS 240
+#include <OctoWS2811.h>
+#include <FastLED.h>
+#include <Arduino.h>
 
-CRGB leds[NUM_LEDS];
+#define DATA_PIN_BOTTOM 1 
+#define DATA_PIN_MIDDLE 17 
+#define DATA_PIN_TOP 20 
+
+#define FPS 240
+#define NUM_LEDS 300
+
+const int numPins = 3;
+  byte pinList[numPins] = {DATA_PIN_BOTTOM, DATA_PIN_MIDDLE, DATA_PIN_TOP};
+  const int ledsPerStrip = 100;
+  CRGB leds[numPins * ledsPerStrip];
+
+  // These buffers need to be large enough for all the pixels.
+  // The total number of pixels is "ledsPerStrip * numPins".
+  // Each pixel needs 3 bytes, so multiply by 3.  An "int" is
+  // 4 bytes, so divide by 4.  The array is created using "int"
+  // so the compiler will align it to 32 bit memory.
+  DMAMEM int displayMemory[ledsPerStrip * numPins * 3 / 4];
+  int drawingMemory[ledsPerStrip * numPins * 3 / 4];
+  OctoWS2811 octo(ledsPerStrip, displayMemory, drawingMemory, WS2811_RGB | WS2811_800kHz, numPins, pinList);
+
+
+template <EOrder RGB_ORDER = RGB,
+          uint8_t CHIP = WS2811_800kHz>
+class CTeensy4Controller : public CPixelLEDController<RGB_ORDER, 8, 0xFF>
+{
+    OctoWS2811 *pocto;
+
+public:
+    CTeensy4Controller(OctoWS2811 *_pocto)
+        : pocto(_pocto){};
+
+    virtual void init() {}
+    virtual void showPixels(PixelController<RGB_ORDER, 8, 0xFF> &pixels)
+    {
+
+        uint32_t i = 0;
+        while (pixels.has(1))
+        {
+            uint8_t r = pixels.loadAndScale0();
+            uint8_t g = pixels.loadAndScale1();
+            uint8_t b = pixels.loadAndScale2();
+            pocto->setPixel(i++, r, g, b);
+            pixels.stepDithering();
+            pixels.advanceData();
+        }
+
+        pocto->show();
+    }
+};
+
+ CTeensy4Controller<RGB, WS2811_800kHz> *pcontroller;
+
 
 
 const int buttonPin1 = 23;
@@ -113,20 +163,14 @@ int clickers = 0;
 void setup() {
 
 
+ octo.begin();
 
-FastLED.addLeds<1, WS2811, 1, RGB>(leds, 0);
-FastLED.addLeds<1, WS2811, 17, RGB>(leds, NUM_LEDS_PER_STRIP);
-FastLED.addLeds<1, WS2811, 20, RGB>(leds, 2 * NUM_LEDS_PER_STRIP);
-FastLED.setMaxRefreshRate(240);
- Serial.begin(9600);
-
-
-
-
-  
-      FastLED.setBrightness(  BRIGHTNESS );
-
-
+pcontroller = new CTeensy4Controller<RGB, WS2811_800kHz>(&octo);
+FastLED.addLeds(pcontroller, leds, numPins * ledsPerStrip);    
+FastLED.setMaxRefreshRate(FPS);
+FastLED.setBrightness(32);
+Serial.begin(9600);  
+FastLED.setBrightness(  BRIGHTNESS );
 
 random16_set_seed(analogRead(A0));
 
