@@ -13,7 +13,7 @@ Timer t;
 #define NUM_LEDS NUM_LEDS_PER_STRIP * NUM_STRIPS
 #define LED_TYPE    WS2811
 #define COLOR_CORRECTION Candle
-#define BRIGHTNESS  192
+#define BRIGHTNESS  32
 
 #define FPS 240
 
