@@ -1,6 +1,5 @@
 #include <Encoder.h>
 
-
 #include <FastLED.h>
 
 #include "Timer.h"
@@ -9,7 +8,7 @@
 Timer t;
 
 #define COLOR_CORRECTION Candle
-#define BRIGHTNESS  16
+#define BRIGHTNESS  64
 
 #include <OctoWS2811.h>
 #include <FastLED.h>
@@ -154,7 +153,8 @@ CRGB cold = CRGB(0,0,0);
 int fade = 0;
 
 
-Encoder myEnc(21, 22);
+Encoder topKnob(11, 12);
+Encoder bottomKnob(9,10);
 long oldPosition  = 255;
 
 int clickers = 0;
@@ -274,7 +274,7 @@ if (fade == 255) fade = 0;
 /* Calibrator  Calibrator  Calibrator  Calibrator  Calibrator  Calibrator  Calibrator  Calibrator  Calibrator */
 
 void calibrator() {
-  long newPosition = myEnc.read();
+  long newPosition = topKnob.read();
   if (newPosition != oldPosition) {
     oldPosition = newPosition;
     Serial.println(newPosition);
