@@ -9,7 +9,7 @@
 Timer t;
 
 #define COLOR_CORRECTION Candle
-#define BRIGHTNESS  32
+#define BRIGHTNESS  16
 
 #include <OctoWS2811.h>
 #include <FastLED.h>
@@ -94,7 +94,7 @@ unsigned long time_now2 = 0;
 unsigned long time_now3 = 0;
 
 // Speed
-int period = 20;
+int period = 200;
 int period2 = 1000;
 int period3 = 1000;
 
@@ -168,7 +168,6 @@ void setup() {
 pcontroller = new CTeensy4Controller<RGB, WS2811_800kHz>(&octo);
 FastLED.addLeds(pcontroller, leds, numPins * ledsPerStrip);    
 FastLED.setMaxRefreshRate(FPS);
-FastLED.setBrightness(32);
 Serial.begin(9600);  
 FastLED.setBrightness(  BRIGHTNESS );
 
