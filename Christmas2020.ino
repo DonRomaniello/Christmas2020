@@ -8,7 +8,7 @@
 Timer t;
 
 #define COLOR_CORRECTION Candle
-#define BRIGHTNESS  64
+#define BRIGHTNESS  8
 
 #include <OctoWS2811.h>
 #include <FastLED.h>
@@ -200,10 +200,10 @@ colb = CRGB(random8(),random8(),random8());
 colc = CRGB(random8(),random8(),random8());
 cold = CRGB(random8(),random8(),random8());
 
-gradTopA = CHSV(random8(),random8(),255);
-gradTopB = CHSV(random8(),random8(),255);
-gradBottomA = CHSV(random8(),random8(),255);
-gradBottomB = CHSV(random8(),random8(),255);
+gradTopA = CHSV(random8(),random8(128,255),255);
+gradTopB = CHSV(random8(),random8(128,255),255);
+gradBottomA = CHSV(random8(),random8(128,255),255);
+gradBottomB = CHSV(random8(),random8(128,255),255);
 
 
 
@@ -488,10 +488,10 @@ if (fade == 255) {
   fade = 0;
 
 gradBottomA = gradBottomB;
-gradBottomB = CHSV(random8(),random8(),255);
+gradBottomB = CHSV(random8(),random8(128,255),255);
 
 gradTopA = gradTopB;
-gradTopB = CHSV(random8(),random8(),255);
+gradTopB = CHSV(random8(),random8(128,255),255);
 
 
 

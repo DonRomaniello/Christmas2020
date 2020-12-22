@@ -11,6 +11,7 @@
 #define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+#define FPS 60
 
 void setup() {
   // OLED setup
@@ -38,7 +39,11 @@ void loop() {
   display.setCursor(1,0);             // Start at top-left corner
   display.println(F("R|G|B"));
   
+  
+  
   display.display();
-  delay(1000);
+  delay(1000/FPS);
+  
+  
 
 }
