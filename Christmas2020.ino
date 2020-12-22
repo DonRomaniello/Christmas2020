@@ -8,7 +8,7 @@
 Timer t;
 
 #define COLOR_CORRECTION Candle
-#define BRIGHTNESS  16
+#define BRIGHTNESS  64
 
 #include <OctoWS2811.h>
 #include <FastLED.h>
@@ -70,15 +70,15 @@ public:
 
 // Flags and Toggles
 
-bool hdran = false; // Has hue drops run
-bool trainran = false;
-bool pdran = false;
-bool cdran = false; // Has Color Drops Run
-bool whitetrainran = false; //Has Whitey run
-bool huetrainran = false; // Has Hue Train Run
-bool correctionlatch = false;
+bool hdRan = false; // Has hue drops run
+bool trainRan = false;
+bool pdRan = false;
+bool cdRan = false; // Has Color Drops Run
+bool whitetrainRan = false; //Has Whitey run
+bool huetrainRan = false; // Has Hue Train run
+bool gradientran = false; // Has the gradient run
 
-
+bool correctionLatch = false;
 
 // Timers
 unsigned long time_now = 0;
@@ -136,11 +136,17 @@ int vchaos2[NUM_LEDS + 2];
 
 
 
-// Random starting colors
+// Random starting colors, herebelow set at zero
 CRGB cola = CRGB(0,0,0);
 CRGB colb = CRGB(0,0,0);
 CRGB colc = CRGB(0,0,0);
 CRGB cold = CRGB(0,0,0);
+
+CHSV gradTopA = CHSV(0,0,0);
+CHSV gradTopB = CHSV(0,0,0);
+CHSV gradBottomA = CHSV(0,0,0);
+CHSV gradBottomB = CHSV(0,0,0);
+
 
 // Fraction of blend/etc - interpolate
 int fade = 0;
@@ -194,6 +200,10 @@ colb = CRGB(random8(),random8(),random8());
 colc = CRGB(random8(),random8(),random8());
 cold = CRGB(random8(),random8(),random8());
 
+gradTopA = CHSV(random8(),random8(),255);
+gradTopB = CHSV(random8(),random8(),255);
+gradBottomA = CHSV(random8(),random8(),255);
+gradBottomB = CHSV(random8(),random8(),255);
 
 
 
@@ -213,7 +223,8 @@ void loop() {
   //calibrator();
   //train();
   //allblue();
-  huetrain();
+  //huetrain();
+  gradient();
 }
 
 void showleds(void *context)
@@ -230,18 +241,18 @@ void showleds(void *context)
 /* Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops */
 
 void colordrops(){
-trainran = false;
-hdran = false;
-pdran = false;
+trainRan = false;
+hdRan = false;
+pdRan = false;
 
 
 
   
-if (cdran == false) {
+if (cdRan == false) {
   for (int i = 0; i < NUM_LEDS; i++) {
     leds[i] = CRGB(random8(),random8(),random8());
   }
-  cdran = true;
+  cdRan = true;
 }
 
 if(millis() > time_now + period){ //check to see if a 'tick' has happened
@@ -305,8 +316,8 @@ fill_solid(leds, 300, CRGB::White);
 
 void train() {
 
-hdran = false;
-cdran = false;
+hdRan = false;
+cdRan = false;
 
 
 if(millis() > time_now + period){
@@ -338,7 +349,7 @@ for (int i = 301; i > 0; i--) {
 void whitetrain() {
 
 // Fill with Whites for first run
-if (whitetrainran == false) {
+if (whitetrainRan == false) {
 for (int i = 0; i < (NUM_LEDS + 2); i++) {
   hchaos1[i] = random8();
   schaos1[i] = random8(whiteSatmax);
@@ -350,7 +361,7 @@ for (int i = 0; i < (NUM_LEDS + 2); i++) {
 for (int i = NUM_LEDS; i > 0; i--) {
 leds[i] = CHSV((int)hchaos1,(int)schaos1,(int)vchaos1); 
 }
-whitetrainran = true;
+whitetrainRan = true;
 fade = 0;
 }
 
@@ -389,7 +400,7 @@ void huetrain() {
 
 
 // Fill with Hues for first run
-if (huetrainran == false) {
+if (huetrainRan == false) {
 for (int i = 0; i < (NUM_LEDS + 2); i++) {
   hchaos1[i] = random8(HueMin, HueMax);
   schaos1[i] = random8(SatMin, SatMax);
@@ -401,7 +412,7 @@ for (int i = 0; i < (NUM_LEDS + 2); i++) {
 for (int i = NUM_LEDS; i > 0; i--) {
 leds[i] = CHSV((int)hchaos1,(int)schaos1,(int)vchaos1); 
 }
-huetrainran = true;
+huetrainRan = true;
 fade = 0;
 }
 
@@ -459,24 +470,68 @@ for (int i = 0; i < 100; i++) {
 }
 
 
+// Gradient
+
+void gradient () {
+
+if(millis() > time_now + period2){
+    time_now = millis();
+    fade++;
+}
+
+
+fill_gradient(leds, 0, blend(gradBottomA, gradBottomB,ease8InOutQuad(fade)), NUM_LEDS, blend(gradTopA, gradTopB,ease8InOutQuad(fade)), FORWARD_HUES);
+
+
+
+if (fade == 255) { 
+  fade = 0;
+
+gradBottomA = gradBottomB;
+gradBottomB = CHSV(random8(),random8(),255);
+
+gradTopA = gradTopB;
+gradTopB = CHSV(random8(),random8(),255);
+
+
+
+}
+
+
+}
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
 
 // Color Correction
 
 void corrections () {
 
   
-if (correctionlatch == false) {
+if (correctionLatch == false) {
  LEDS.setCorrection( Candle );
 }
 
  
-if (correctionlatch == true) {
+if (correctionLatch == true) {
  LEDS.setCorrection( Halogen );
 }
 
 if(millis() > time_now3 + period3){
   time_now3 = millis();
-  correctionlatch = !(correctionlatch);   
+  correctionLatch = !(correctionLatch);   
 }
 
 

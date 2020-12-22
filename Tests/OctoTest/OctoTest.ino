@@ -58,7 +58,7 @@ void setup() {
 
     FastLED.addLeds(pcontroller, leds, numPins * ledsPerStrip);    
     FastLED.setMaxRefreshRate(240);
-    FastLED.setBrightness(32);
+    FastLED.setBrightness(64);
   }
 
 
@@ -69,7 +69,10 @@ void loop() {
 //fill_solid(leds, 200, CRGB::Green);
 //FastLED.show();
 //FastLED.delay(500);
-fill_solid(leds, 300, CRGB::Red);
+//fill_solid(leds, 300, CRGB::Red);
+
+fill_gradient(leds, 0, CHSV(255,255,255), 300, CHSV(128, 255, 255), SHORTEST_HUES);
+
 FastLED.show();
 FastLED.delay(500);
 }
