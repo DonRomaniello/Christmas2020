@@ -77,6 +77,7 @@ bool cdRan = false; // Has Color Drops Run
 bool whitetrainRan = false; //Has Whitey run
 bool huetrainRan = false; // Has Hue Train run
 bool hsvGradientran = false; // Has the hsvGradient run
+bool rgbGradientran = false; //Has the rgbGradient run
 
 bool correctionLatch = false;
 
@@ -146,6 +147,7 @@ CHSV gradTopA = CHSV(0,0,0);
 CHSV gradTopB = CHSV(0,0,0);
 CHSV gradBottomA = CHSV(0,0,0);
 CHSV gradBottomB = CHSV(0,0,0);
+
 
 
 // Fraction of blend/etc - interpolate
@@ -501,6 +503,14 @@ gradTopB = CHSV(random8(),random8(128,255),255);
 
 void rgbGradient () {
 
+if(rgbGradientran == false){
+  hsv2rgb_rainbow(CHSV(random8(),random8(128,255),255), colA);
+  hsv2rgb_rainbow(CHSV(random8(),random8(128,255),255), colB);
+  hsv2rgb_rainbow(CHSV(random8(),random8(128,255),255), colC);
+  hsv2rgb_rainbow(CHSV(random8(),random8(128,255),255), colD);
+  rgbGradientran = true;
+}
+
 
 if(millis() > time_now + period2){
     time_now = millis();
@@ -514,10 +524,10 @@ fill_gradient_RGB(leds, 0, blend (colA, colC, ease8InOutQuad(fade)), NUM_LEDS, b
 if (fade == 255) { 
   fade = 0;
 colA = colC;
-colC = CRGB(random8(),random8(),random8());
+hsv2rgb_rainbow(CHSV(random8(),random8(128,255),255), colC);
 
 colB = colD;
-colD = CRGB(random8(),random8(),random8());
+hsv2rgb_rainbow(CHSV(random8(),random8(128,255),255), colD);
 
 }
 
@@ -549,7 +559,6 @@ colD = CRGB(random8(),random8(),random8());
 
 void corrections () {
 
-  
 if (correctionLatch == false) {
  LEDS.setCorrection( Candle );
 }
