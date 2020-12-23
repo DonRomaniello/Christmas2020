@@ -11,6 +11,7 @@
 #define OLED_RESET     4 // Reset pin # (or -1 if sharing Arduino reset pin)
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
+
 #define FPS 60
 
 void setup() {
@@ -36,8 +37,16 @@ void loop() {
 
   display.setTextSize(1);             // Normal 1:1 pixel scale
   display.setTextColor(SSD1306_WHITE);        // Draw white text
-  display.setCursor(1,0);             // Start at top-left corner
+  display.setCursor(0,0);             // Start at top-left corner
   display.println(F("R|G|B"));
+
+
+  display.drawLine(2, 10, 2, (display.height()-1), SSD1306_WHITE);
+  display.drawLine(14, 10, 14, (display.height()-1), SSD1306_WHITE);
+  display.drawLine(25, 10, 25, (display.height()-1), SSD1306_WHITE);
+
+ 
+
   
   
   

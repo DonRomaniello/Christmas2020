@@ -8,7 +8,7 @@
 Timer t;
 
 #define COLOR_CORRECTION Candle
-#define BRIGHTNESS  8
+#define BRIGHTNESS  64
 
 #include <OctoWS2811.h>
 #include <FastLED.h>
