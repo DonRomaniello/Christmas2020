@@ -46,12 +46,9 @@ void loop() {
   display.drawLine(25, 10, 25, (display.height()-1), SSD1306_WHITE);
 
  
-
-  
-  
-  
   display.display();
   delay(1000/FPS);
+  display.clearDisplay();
   
   
 

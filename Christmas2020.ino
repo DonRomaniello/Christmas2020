@@ -76,7 +76,7 @@ bool pdRan = false;
 bool cdRan = false; // Has Color Drops Run
 bool whitetrainRan = false; //Has Whitey run
 bool huetrainRan = false; // Has Hue Train run
-bool gradientran = false; // Has the gradient run
+bool hsvGradientran = false; // Has the hsvGradient run
 
 bool correctionLatch = false;
 
@@ -137,10 +137,10 @@ int vchaos2[NUM_LEDS + 2];
 
 
 // Random starting colors, herebelow set at zero
-CRGB cola = CRGB(0,0,0);
-CRGB colb = CRGB(0,0,0);
-CRGB colc = CRGB(0,0,0);
-CRGB cold = CRGB(0,0,0);
+CRGB colA = CRGB(0,0,0);
+CRGB colB = CRGB(0,0,0);
+CRGB colC = CRGB(0,0,0);
+CRGB colD = CRGB(0,0,0);
 
 CHSV gradTopA = CHSV(0,0,0);
 CHSV gradTopB = CHSV(0,0,0);
@@ -195,10 +195,10 @@ for (int i = 0; i < (NUM_LEDS + 2); i++) {
   
 }
 
-cola = CRGB(random8(),random8(),random8());
-colb = CRGB(random8(),random8(),random8());
-colc = CRGB(random8(),random8(),random8());
-cold = CRGB(random8(),random8(),random8());
+colA = CRGB(random8(),random8(),random8());
+colB = CRGB(random8(),random8(),random8());
+colC = CRGB(random8(),random8(),random8());
+colD = CRGB(random8(),random8(),random8());
 
 gradTopA = CHSV(random8(),random8(128,255),255);
 gradTopB = CHSV(random8(),random8(128,255),255);
@@ -224,7 +224,8 @@ void loop() {
   //train();
   //allblue();
   //huetrain();
-  gradient();
+  //hsvGradient();
+  rgbGradient();
 }
 
 void showleds(void *context)
@@ -265,14 +266,14 @@ changeb = random8();
 
 
     
-    cola = CRGB(changer, changeg, changeb);
+    colA = CRGB(changer, changeg, changeb);
     }
 
 
 
     
 if (millis() > time_now2 + (period/255)) {
-  leds[i] = blend(leds[i], cola, fade);
+  leds[i] = blend(leds[i], colA, fade);
 time_now2 = millis();
   fade++;
 }
@@ -470,9 +471,9 @@ for (int i = 0; i < 100; i++) {
 }
 
 
-// Gradient
+// HSV Gradient
 
-void gradient () {
+void hsvGradient () {
 
 if(millis() > time_now + period2){
     time_now = millis();
@@ -496,10 +497,39 @@ gradTopB = CHSV(random8(),random8(128,255),255);
 
 
 }
+}
 
+void rgbGradient () {
+
+
+if(millis() > time_now + period2){
+    time_now = millis();
+    fade++;
+}
+
+
+fill_gradient_RGB(leds, 0, blend (colA, colC, ease8InOutQuad(fade)), NUM_LEDS, blend (colB, colD, ease8InOutQuad(fade)));
+
+
+if (fade == 255) { 
+  fade = 0;
+colA = colC;
+colC = CRGB(random8(),random8(),random8());
+
+colB = colD;
+colD = CRGB(random8(),random8(),random8());
 
 }
 
+
+
+
+
+
+
+
+  
+}
 
 
 
