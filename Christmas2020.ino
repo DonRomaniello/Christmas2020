@@ -87,7 +87,7 @@ unsigned long time_now2 = 0;
 unsigned long time_now3 = 0;
 
 // Speed
-int period = 200;
+int period = 1000;
 int period2 = 1000;
 int period3 = 1000;
 
@@ -157,8 +157,9 @@ int fade = 0;
 
 Encoder topKnob(11, 12);
 Encoder bottomKnob(9,10);
-long oldPositionTop  = 255;
-long oldPositionBottom  = 255;
+
+long oldPositionTop  = BRIGHTNESS;
+long oldPositionBottom  = period;
 
 ClickButton buttonTop(14, LOW, CLICKBTN_PULLUP);
 ClickButton buttonBottom(15, LOW, CLICKBTN_PULLUP);
@@ -176,7 +177,6 @@ Entropy.Initialize();
 pcontroller = new CTeensy4Controller<RGB, WS2811_800kHz>(&octo);
 FastLED.addLeds(pcontroller, leds, numPins * ledsPerStrip);    
 FastLED.setMaxRefreshRate(FPS);
-Serial.begin(9600);  
 FastLED.setBrightness(  BRIGHTNESS );
 
 // Set random seed
@@ -222,6 +222,8 @@ gradBottomB = CHSV(random8(),random8(128,255),255);
 
 void loop() {
 
+  settings();
+  
    t.update();
   //whitetrain();
   //colordrops();
@@ -232,6 +234,20 @@ void loop() {
   //hsvGradient();
   rgbGradient();
 }
+
+void settings(){
+ knobs();
+ FastLED.setBrightness(  oldPositionTop );
+ //period = oldPositionBottom; 
+}
+
+
+void knobs(){
+  oldPositionTop  = topKnob.read();
+  oldPositionBottom  = bottomKnob.read();
+}
+
+
 
 void showleds(void *context)
 {
@@ -480,7 +496,7 @@ for (int i = 0; i < 100; i++) {
 
 void hsvGradient () {
 
-if(millis() > time_now + period2){
+if(millis() > time_now + period){
     time_now = millis();
     fade++;
 }
