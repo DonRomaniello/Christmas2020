@@ -1,6 +1,10 @@
 #include <Encoder.h>
-
+#include <Entropy.h>
 #include <FastLED.h>
+#include <OctoWS2811.h>
+#include <FastLED.h>
+#include <Arduino.h>
+
 
 #include "Timer.h"
 #include "ClickButton.h"
@@ -9,10 +13,6 @@ Timer t;
 
 #define COLOR_CORRECTION Candle
 #define BRIGHTNESS  64
-
-#include <OctoWS2811.h>
-#include <FastLED.h>
-#include <Arduino.h>
 
 #define DATA_PIN_BOTTOM 1 
 #define DATA_PIN_MIDDLE 17 
@@ -168,7 +168,8 @@ int clickerBottom = 0;
 
 
 void setup() {
-
+//Initialize entropy
+Entropy.Initialize();
 
  octo.begin();
 
@@ -178,7 +179,9 @@ FastLED.setMaxRefreshRate(FPS);
 Serial.begin(9600);  
 FastLED.setBrightness(  BRIGHTNESS );
 
-random16_set_seed(analogRead(A0));
+// Set random seed
+
+random16_set_seed(Entropy.random(WDT_RETURN_WORD));
 
 // Fill chaos arrays
 for (int i = 0; i < (NUM_LEDS + 2); i++) {
