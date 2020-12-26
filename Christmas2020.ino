@@ -4,33 +4,40 @@
 #include <OctoWS2811.h>
 #include <FastLED.h>
 #include <Arduino.h>
-
+#include <SPI.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 #include "Timer.h"
 #include "ClickButton.h"
 
-Timer t;
+
+
 
 #define COLOR_CORRECTION Candle
-#define BRIGHTNESS  64
+int BRIGHTNESS = 64;
 
 #define DATA_PIN_BOTTOM 1 
 #define DATA_PIN_MIDDLE 17 
 #define DATA_PIN_TOP 20 
 
 #define FPS 240
+#define OLED_FPS 30
 #define NUM_LEDS 300
+
+
+// OLED stuff
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, 4);
+unsigned long displayTimeout = (60 * 1000);
 
 const int numPins = 3;
   byte pinList[numPins] = {DATA_PIN_BOTTOM, DATA_PIN_MIDDLE, DATA_PIN_TOP};
   const int ledsPerStrip = 100;
   CRGB leds[numPins * ledsPerStrip];
-
-  // These buffers need to be large enough for all the pixels.
-  // The total number of pixels is "ledsPerStrip * numPins".
-  // Each pixel needs 3 bytes, so multiply by 3.  An "int" is
-  // 4 bytes, so divide by 4.  The array is created using "int"
-  // so the compiler will align it to 32 bit memory.
+  
   DMAMEM int displayMemory[ledsPerStrip * numPins * 3 / 4];
   int drawingMemory[ledsPerStrip * numPins * 3 / 4];
   OctoWS2811 octo(ledsPerStrip, displayMemory, drawingMemory, WS2811_RGB | WS2811_800kHz, numPins, pinList);
@@ -82,15 +89,20 @@ bool paused = false;
 
 bool correctionLatch = false;
 bool inputsChanged = true;
+bool timeoutRunning = false;
+int oled_refresh = 0;
+
+
+
 
 // Timers
 unsigned long time_now = 0;
 unsigned long time_now2 = 0;
 unsigned long time_now3 = 0;
-unsigned long lastInput = 0;
+unsigned long displayTimeoutTimer = 0;
 
 // Speed
-int period = 100;
+int period = 1000;
 int period2 = 1000;
 int period3 = 1000;
 
@@ -116,11 +128,7 @@ int BriMin = 200;
 int SatMax = 255;
 int SatMin = 128;
 
-
-
 int i = 0;
-
-
 
 // Chaos Arrays
 
@@ -163,6 +171,8 @@ Encoder bottomKnob(9,10);
 
 long oldPositionTop  = BRIGHTNESS;
 long oldPositionBottom  = period;
+long newPositionTop = oldPositionTop;
+long newPositionBottom = oldPositionBottom;
 
 ClickButton buttonTop(14, LOW, CLICKBTN_PULLUP);
 ClickButton buttonBottom(15, LOW, CLICKBTN_PULLUP);
@@ -170,6 +180,9 @@ ClickButton buttonBottom(15, LOW, CLICKBTN_PULLUP);
 int clickerTop = 0;
 int clickerBottom = 0;
 
+
+//Declare that there will be a timer, 't'
+Timer t;
 
 //
 //  /$$$$$$ /$$$$$$$$/$$$$$$$$/$$   /$$/$$$$$$$ 
@@ -236,14 +249,27 @@ gradBottomB = CHSV(random8(),random8(128,255),255);
   buttonBottom.debounceTime   = 20;   // Debounce timer in ms
   buttonBottom.multiclickTime = 250;  // Time limit for multi clicks
   buttonBottom.longClickTime  = 1000; // time until "held-down clicks" register
-
  
+
+
+// OLED Display
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
+  display.setRotation(3);
+  display.clearDisplay();
 }
+
+//
+//EEEE N   N DDD       SSS  EEEE TTTTTT U   U PPPP  
+//E    NN  N D  D     S     E      TT   U   U P   P 
+//EEE  N N N D  D      SSS  EEE    TT   U   U PPPP  
+//E    N  NN D  D         S E      TT   U   U P     
+//EEEE N   N DDD      SSSS  EEEE   TT    UUU  P     
+//                                                  
 
 void loop() {
 
   settings();
-  
+  timeout();
    t.update();
   //whitetrain();
   //colordrops();
@@ -255,6 +281,24 @@ void loop() {
   rgbGradient();
 }
 
+
+void showleds(void *context)
+{
+  FastLED.show();
+  oled_display();
+} 
+
+void oled_display(){
+// To avoid excessive updates of the OLED display, only display when needed
+  if ((FPS / OLED_FPS) == oled_refresh) {
+    display.display();
+    oled_refresh = 0;
+  }
+  else {
+    oled_refresh++;
+  }
+}
+
 void settings(){
  knobs();
  clickers();
@@ -264,30 +308,47 @@ void settings(){
 
 
 void knobs(){
-  oldPositionTop  = topKnob.read();
-  oldPositionBottom  = bottomKnob.read();
+  newPositionTop  = topKnob.read();
+  newPositionBottom  = bottomKnob.read();
+  if (newPositionTop != oldPositionTop){
+    oldPositionTop = newPositionTop;
+    inputsChanged = true;
+  }
+  if (newPositionBottom != oldPositionBottom){
+    oldPositionBottom = newPositionBottom;
+    inputsChanged = true;
+  }
+  
 }
 
 void clickers(){
    buttonTop.Update();
    buttonBottom.Update();
-
   // Save click codes in LEDfunction, as click codes are reset at next Update()
   if (buttonTop.clicks != 0) clickerTop = buttonTop.clicks;
   if (buttonBottom.clicks != 0) clickerBottom = buttonBottom.clicks;
  
 }
 
+void oled(){
+    
+}
+
+void timeout(){
+
+  if (inputsChanged == true){
+    displayTimeoutTimer = millis();
+    inputsChanged = false;
+  }
+  else if ((millis() - displayTimeoutTimer) >= displayTimeout){
+     display.clearDisplay();  
+  }
+  
+}
 
 
 
-void showleds(void *context)
-{
-  FastLED.show();
-  buttonTop.Update();
-  buttonBottom.Update();
-  if (buttonTop.clicks != 0) clickerTop = buttonTop.clicks;
-} 
+
 
 
 
@@ -580,31 +641,8 @@ hsv2rgb_rainbow(CHSV(random8(),random8(128,255),255), colC);
 colB = colD;
 hsv2rgb_rainbow(CHSV(random8(),random8(128,255),255), colD);
 
+}  
 }
-
-
-
-
-
-
-
-
-  
-}
-
-
-
-
-
-
-  
-
-
-
-
-
-
-
 
 // Color Correction
 
