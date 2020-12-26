@@ -78,16 +78,19 @@ bool whitetrainRan = false; //Has Whitey run
 bool huetrainRan = false; // Has Hue Train run
 bool hsvGradientran = false; // Has the hsvGradient run
 bool rgbGradientran = false; //Has the rgbGradient run
+bool paused = false;
 
 bool correctionLatch = false;
+bool inputsChanged = true;
 
 // Timers
 unsigned long time_now = 0;
 unsigned long time_now2 = 0;
 unsigned long time_now3 = 0;
+unsigned long lastInput = 0;
 
 // Speed
-int period = 1000;
+int period = 100;
 int period2 = 1000;
 int period3 = 1000;
 
@@ -168,6 +171,17 @@ int clickerTop = 0;
 int clickerBottom = 0;
 
 
+//
+//  /$$$$$$ /$$$$$$$$/$$$$$$$$/$$   /$$/$$$$$$$ 
+// /$$__  $| $$_____|__  $$__| $$  | $| $$__  $$
+//| $$  \__| $$        | $$  | $$  | $| $$  \ $$
+//|  $$$$$$| $$$$$     | $$  | $$  | $| $$$$$$$/
+// \____  $| $$__/     | $$  | $$  | $| $$____/ 
+// /$$  \ $| $$        | $$  | $$  | $| $$      
+//|  $$$$$$| $$$$$$$$  | $$  |  $$$$$$| $$      
+// \______/|________/  |__/   \______/|__/      
+                                              
+                                                                                            
 void setup() {
 //Initialize entropy
 Entropy.Initialize();
@@ -210,12 +224,18 @@ gradTopB = CHSV(random8(),random8(128,255),255);
 gradBottomA = CHSV(random8(),random8(128,255),255);
 gradBottomB = CHSV(random8(),random8(128,255),255);
 
-
-
-
 // Set Up Loop that runs every frame (FPS)      
  t.every((1000/FPS), showleds, (void*)0);
 
+
+// Click buttons
+  buttonTop.debounceTime   = 20;   // Debounce timer in ms
+  buttonTop.multiclickTime = 250;  // Time limit for multi clicks
+  buttonTop.longClickTime  = 1000; // time until "held-down clicks" register
+
+  buttonBottom.debounceTime   = 20;   // Debounce timer in ms
+  buttonBottom.multiclickTime = 250;  // Time limit for multi clicks
+  buttonBottom.longClickTime  = 1000; // time until "held-down clicks" register
 
  
 }
@@ -237,8 +257,9 @@ void loop() {
 
 void settings(){
  knobs();
+ clickers();
  FastLED.setBrightness(  oldPositionTop );
- //period = oldPositionBottom; 
+ period = oldPositionBottom; 
 }
 
 
@@ -246,6 +267,17 @@ void knobs(){
   oldPositionTop  = topKnob.read();
   oldPositionBottom  = bottomKnob.read();
 }
+
+void clickers(){
+   buttonTop.Update();
+   buttonBottom.Update();
+
+  // Save click codes in LEDfunction, as click codes are reset at next Update()
+  if (buttonTop.clicks != 0) clickerTop = buttonTop.clicks;
+  if (buttonBottom.clicks != 0) clickerBottom = buttonBottom.clicks;
+ 
+}
+
 
 
 
@@ -531,7 +563,7 @@ if(rgbGradientran == false){
 }
 
 
-if(millis() > time_now + period2){
+if(millis() > time_now + period){
     time_now = millis();
     fade++;
 }
