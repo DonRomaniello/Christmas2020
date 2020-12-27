@@ -23,7 +23,7 @@ int BRIGHTNESS = 64;
 #define DATA_PIN_TOP 20 
 
 #define FPS 240
-#define OLED_FPS 30
+#define OLED_FPU (240 / 30)
 #define NUM_LEDS 300
 
 
@@ -259,17 +259,18 @@ gradBottomB = CHSV(random8(),random8(128,255),255);
 }
 
 //
-//EEEE N   N DDD       SSS  EEEE TTTTTT U   U PPPP  
-//E    NN  N D  D     S     E      TT   U   U P   P 
-//EEE  N N N D  D      SSS  EEE    TT   U   U PPPP  
-//E    N  NN D  D         S E      TT   U   U P     
-//EEEE N   N DDD      SSSS  EEEE   TT    UUU  P     
+//  EEEE N   N DDD       SSS  EEEE TTTTTT U   U PPPP  
+//  E    NN  N D  D     S     E      TT   U   U P   P 
+//  EEE  N N N D  D      SSS  EEE    TT   U   U PPPP  
+//  E    N  NN D  D         S E      TT   U   U P     
+//  EEEE N   N DDD      SSSS  EEEE   TT    UUU  P     
 //                                                  
 
 void loop() {
 
+  inputs();
   settings();
-  timeout();
+  oled();
    t.update();
   //whitetrain();
   //colordrops();
@@ -285,26 +286,18 @@ void loop() {
 void showleds(void *context)
 {
   FastLED.show();
-  oled_display();
 } 
 
-void oled_display(){
-// To avoid excessive updates of the OLED display, only display when needed
-  if ((FPS / OLED_FPS) == oled_refresh) {
-    display.display();
-    oled_refresh = 0;
-  }
-  else {
-    oled_refresh++;
-  }
+void inputs(){
+ knobs();
+ clickers();
 }
 
 void settings(){
- knobs();
- clickers();
  FastLED.setBrightness(  oldPositionTop );
  period = oldPositionBottom; 
 }
+
 
 
 void knobs(){
@@ -331,7 +324,31 @@ void clickers(){
 }
 
 void oled(){
-    
+  timeout();
+  oled_display();
+}
+
+void timeout(){
+
+  if (inputsChanged == true){
+    displayTimeoutTimer = millis();
+    inputsChanged = false;
+  }
+  else if ((millis() - displayTimeoutTimer) >= displayTimeout){
+     display.clearDisplay();  
+  }
+  
+}
+
+void oled_display(){
+// To avoid excessive updates of the OLED display, refresh at a lower rate
+  if ( OLED_FPU == oled_refresh) {
+    display.display();
+    oled_refresh = 0;
+  }
+  else {
+    oled_refresh++;
+  }
 }
 
 void info(const char* fieldA, float valueA, const char* unitA, const char* fieldB, float valueB, const char* unitB){
@@ -347,29 +364,6 @@ void info(const char* fieldA, float valueA, const char* unitA, const char* field
   display.print(valueB);
   display.print(unitB);
 }
-
-
-
-
-
-void timeout(){
-
-  if (inputsChanged == true){
-    displayTimeoutTimer = millis();
-    inputsChanged = false;
-  }
-  else if ((millis() - displayTimeoutTimer) >= displayTimeout){
-     display.clearDisplay();  
-  }
-  
-}
-
-
-
-
-
-
-
 
 /* Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops */
 
