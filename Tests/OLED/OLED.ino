@@ -13,15 +13,22 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 
 #define FPS 60
+float value = 92.8;
+int cps = (1000 / 1000);
 
 void setup() {
   // OLED setup
-  Serial.begin(9600);
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
-  // Rotations... odd numbers are vertical
-  display.setRotation(3);
+  display.setRotation(2);
   display.clearDisplay();
 
+
+//  display.drawLine(2, 10, 2, (display.height()-1), SSD1306_WHITE);
+//  display.drawLine(14, 10, 14, (display.height()-1), SSD1306_WHITE);
+//  display.drawLine(25, 10, 25, (display.height()-1), SSD1306_WHITE);
+
+ 
+  
 
 
 }
@@ -34,22 +41,27 @@ void loop() {
 
 
 
-
   display.setTextSize(1);             // Normal 1:1 pixel scale
   display.setTextColor(SSD1306_WHITE);        // Draw white text
-  display.setCursor(0,0);             // Start at top-left corner
-  display.println(F("R|G|B"));
-
-
-  display.drawLine(2, 10, 2, (display.height()-1), SSD1306_WHITE);
-  display.drawLine(14, 10, 14, (display.height()-1), SSD1306_WHITE);
-  display.drawLine(25, 10, 25, (display.height()-1), SSD1306_WHITE);
-
- 
+  showTime("Brightness:", 81.2, "%", "Speed:", 2,"cps");
   display.display();
-  delay(1000/FPS);
-  display.clearDisplay();
+
   
   
 
+}
+
+
+void showTime(const char* fieldA, float valueA, const char* unitA, const char* fieldB, float valueB, const char* unitB){
+  display.setCursor(0,0);             // Start at top-left corner
+  display.print(fieldA);
+  display.setCursor(70,0);
+  display.print(valueA);
+  display.print(unitA);
+
+  display.setCursor(0,12);
+  display.print(fieldB);
+  display.setCursor(70,12);
+  display.print(valueB);
+  display.print(unitB);
 }

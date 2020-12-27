@@ -334,6 +334,24 @@ void oled(){
     
 }
 
+void info(const char* fieldA, float valueA, const char* unitA, const char* fieldB, float valueB, const char* unitB){
+  display.setCursor(0,0);             // Start at top-left corner
+  display.print(fieldA);
+  display.setCursor(70,0);
+  display.print(valueA);
+  display.print(unitA);
+
+  display.setCursor(0,12);
+  display.print(fieldB);
+  display.setCursor(70,12);
+  display.print(valueB);
+  display.print(unitB);
+}
+
+
+
+
+
 void timeout(){
 
   if (inputsChanged == true){
