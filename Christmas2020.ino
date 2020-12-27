@@ -102,9 +102,9 @@ unsigned long time_now3 = 0;
 unsigned long displayTimeoutTimer = 0;
 
 // Speed
-int period = 1000;
-int period2 = 1000;
-int period3 = 1000;
+long period = 1000;
+long period2 = 1000;
+long period3 = 1000;
 
 // Values That Need Be addressed
 int changer = 0;
