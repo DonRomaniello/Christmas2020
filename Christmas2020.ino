@@ -680,7 +680,6 @@ void rgbGradient () {
     fade = 0;
     colA = colC;
     random16_set_seed(Entropy.random(WDT_RETURN_WORD));
-    randomSeed(Entropy.random(WDT_RETURN_WORD));
     hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colC);
 
     colB = colD;
