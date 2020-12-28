@@ -656,33 +656,25 @@ void rgbGradient () {
   }
 
   
-  fill_gradient_RGB(leds, 0, blend (colA, colC, ease8InOutQuad(fade)), NUM_LEDS, blend (colB, colD, ease8InOutQuad(fade)));
+  //fill_gradient_RGB(leds, 0, blend (colA, colC, ease8InOutQuad(fade)), NUM_LEDS, blend (colB, colD, ease8InOutQuad(fade)));
 
 
+
+  CRGB layer0_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 28);
+  CRGB layer1_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 57);
+  CRGB layer2_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 85);
+  CRGB layer3_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 114);
   
-//  // Layer 0
-//  fill_gradient_RGB(leds, 0, 
-//  blend(blend (colA, colC, ease8InOutQuad(fade)), blend (colB, colD, ease8InOutQuad(fade)),((0/9)*256)),48,
-//  blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), ( round((1/9) * /255) - 1)));
-//   // Layer 1
-//  fill_gradient_RGB(leds, 49, 
-//  blend(blend (colA, colC, ease8InOutQuad(fade)), blend (colB, colD, ease8InOutQuad(fade)),( round((1/9)*255))),97,
-//  blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), ( round((2/9) * 255) - 1)));
-//  // Layer 1
-//  fill_gradient_RGB(leds, 98, 
-//  blend(blend (colA, colC, ease8InOutQuad(fade)), blend (colB, colD, ease8InOutQuad(fade)),(round((2/9)*255))),145,
-//  blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), (round((3/9)*255) - 1)));
-//   // Layer 2
-//  fill_gradient_RGB(leds, 146, 
-//  blend(blend (colA, colC, ease8InOutQuad(fade)), blend (colB, colD, ease8InOutQuad(fade)),(round((3/9)*255))),193,
-//  blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), (round((4/9)*255) - 1)));
-//   // Top
-//  fill_gradient_RGB(leds, 194, 
-//  blend(blend (colA, colC, ease8InOutQuad(fade)), blend (colB, colD, ease8InOutQuad(fade)),(round((4/9)*255))),300,
-//  blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), ((9/9)*255)));
-
-
-
+// Layer 0
+  fill_gradient_RGB(leds, 0, (blend (colA, colC, ease8InOutQuad(fade))), 48, layer0_End);
+// Layer 1
+  fill_gradient_RGB(leds, 49, layer0_End, 97, layer1_End);
+// Layer 2
+  fill_gradient_RGB(leds, 98, layer1_End, 145, layer2_End);
+// Layer 3
+  fill_gradient_RGB(leds, 146, layer2_End, 193, layer3_End);
+// Top
+  fill_gradient_RGB(leds, 194, layer3_End, NUM_LEDS, blend (colB, colD, ease8InOutQuad(fade)));
 
   if (fade == 255) {
     fade = 0;
