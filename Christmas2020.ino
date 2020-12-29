@@ -33,10 +33,15 @@ int BRIGHTNESS = 64;
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, 4);
 unsigned long displayTimeout = (60 * 1000);
 
+// Led stuff
 const int numPins = 3;
 byte pinList[numPins] = {DATA_PIN_BOTTOM, DATA_PIN_MIDDLE, DATA_PIN_TOP};
 const int ledsPerStrip = 100;
 CRGB leds[numPins * ledsPerStrip];
+CRGB leds_B[numPins * ledsPerStrip]; // Also create non-displayed LED arrays for holding effects
+CRGB leds_C[numPins * ledsPerStrip];  // ...
+CRGB leds_ChaosRGB[numPins * ledsPerStrip + 2]; // chaos arrays
+CRGB leds_ChaosHSV[numPins * ledsPerStrip + 2]; // ...
 
 DMAMEM int displayMemory[ledsPerStrip * numPins * 3 / 4];
 int drawingMemory[ledsPerStrip * numPins * 3 / 4];
@@ -131,23 +136,6 @@ int SatMin = 128;
 
 int i = 0;
 
-// Chaos Arrays
-
-int rchaos1[NUM_LEDS + 2];
-int gchaos1[NUM_LEDS + 2];
-int bchaos1[NUM_LEDS + 2];
-int rchaos2[NUM_LEDS + 2];
-int gchaos2[NUM_LEDS + 2];
-int bchaos2[NUM_LEDS + 2];
-int hchaos1[NUM_LEDS + 2];
-int schaos1[NUM_LEDS + 2];
-int vchaos1[NUM_LEDS + 2];
-int hchaos2[NUM_LEDS + 2];
-int schaos2[NUM_LEDS + 2];
-int vchaos2[NUM_LEDS + 2];
-
-
-
 
 // Random starting colors, herebelow set at zero
 CRGB colA = CRGB(0, 0, 0);
@@ -218,18 +206,8 @@ void setup() {
 
   // Fill chaos arrays
   for (int i = 0; i < (NUM_LEDS + 2); i++) {
-    rchaos1[i] = random8();
-    gchaos1[i] = random8();
-    bchaos1[i] = random8();
-    rchaos2[i] = random8();
-    gchaos2[i] = random8();
-    bchaos2[i] = random8();
-    hchaos1[i] = random8();
-    schaos1[i] = random8();
-    vchaos1[i] = random8();
-    hchaos2[i] = random8();
-    schaos2[i] = random8();
-    vchaos2[i] = random8();
+    leds_ChaosRGB[i] = CRGB(random8(), random8(), random8());
+    leds_ChaosHSV[i] = CRGB(random8(), random8(), random8());
 
   }
 
@@ -287,9 +265,7 @@ void loop() {
   t.update();
   //whiteTrain();
   //colordrops();
-  //calibrator();
   //train();
-  //allblue();
   //hueTrain();
   //hsvGradient();
   rgbGradient();
@@ -423,34 +399,6 @@ void colordrops() {
 
 
 
-/* Calibrator  Calibrator  Calibrator  Calibrator  Calibrator  Calibrator  Calibrator  Calibrator  Calibrator */
-
-void calibrator() {
-  long newPositionTop = topKnob.read();
-  if (newPositionTop != oldPositionTop) {
-    oldPositionTop = newPositionTop;
-    Serial.println(newPositionTop);
-  }
-  if (buttonTop.clicks == 0) {
-    raw = newPositionTop;
-  }
-  if (buttonTop.clicks == 1) {
-    gaw = newPositionTop;
-  }
-  if (buttonTop.clicks == 2) {
-    baw = newPositionTop;
-  }
-  if (buttonTop.clicks == -1) {
-    newPositionTop = 255;
-  }
-
-
-  fill_solid(leds, 300, CRGB::White);
-
-
-
-}
-
 
 
 // Train  Train  Train  Train  Train  Train  Train  Train  Train  Train  Train  Train  Train
@@ -468,18 +416,17 @@ void train() {
 
 
   for (int i = 0; i < 300; i++) {
-    leds[i] = blend(CRGB(rchaos1[(i + 2)], gchaos1[(i + 2)], bchaos1[(i + 2)]), CRGB(rchaos1[(i + 1)], gchaos1[(i + 1)], bchaos1[(i + 1)]), ease8InOutQuad(fade));
+    leds[i] = blend(leds_ChaosRGB[(i + 2)], leds_ChaosRGB[(i + 1)], ease8InOutQuad(fade));
   }
+
+
+
 
   if (fade == 255) {
     fade = 0;
-    rchaos1[0] = random8();
-    gchaos1[0] = random8();
-    bchaos1[0] = random8();
+    leds_ChaosRGB[0] = CRGB(random8(),random8(),random8());
     for (int i = 301; i > 0; i--) {
-      rchaos1[i] = rchaos1[(i - 1)];
-      gchaos1[i] = gchaos1[(i - 1)];
-      bchaos1[i] = bchaos1[(i - 1)];
+      leds_ChaosRGB[i] = leds_ChaosRGB[(i - 1)];
     }
   }
 
@@ -492,15 +439,10 @@ void whiteTrain() {
   // Fill with Whites for first run
   if (whiteTrainRan == false) {
     for (int i = 0; i < (NUM_LEDS + 2); i++) {
-      hchaos1[i] = random8();
-      schaos1[i] = random8(whiteSatmax);
-      vchaos1[i] = random8(whiteValmin, 255);
-      hchaos2[i] = random8();
-      schaos2[i] = random8(whiteSatmax);
-      vchaos2[i] = random8(whiteValmin, 255);
+      leds_ChaosHSV[i] = CHSV(random8(), random8(whiteSatmax), random8(whiteValmin, 255));
     }
     for (int i = NUM_LEDS; i > 0; i--) {
-      leds[i] = CHSV((int)hchaos1, (int)schaos1, (int)vchaos1);
+      leds[i] = leds_ChaosHSV[i];
     }
     whiteTrainRan = true;
     fade = 0;
@@ -514,24 +456,16 @@ void whiteTrain() {
   }
 
   for (int i = 0; i < 300; i++) {
-    leds[i] = blend(CHSV(hchaos1[(i + 2)], schaos1[(i + 2)], vchaos1[(i + 2)]), CHSV(hchaos1[(i + 1)], schaos1[(i + 1)], vchaos1[(i + 1)]), ease8InOutQuad(fade), SHORTEST_HUES);
+    leds[i] = blend(leds_ChaosHSV[(i + 2)], leds_ChaosHSV[(i + 1)], ease8InOutQuad(fade));
   }
-
 
   if (fade == 255) {
     fade = 0; // Reset fade
-    hchaos1[0] = random8();
-    schaos1[0] = random8(whiteSatmax);
-    vchaos1[0] = random8(whiteValmin, 255);
+    leds_ChaosHSV[0] = CHSV(random8(), random8(whiteSatmax), random8(whiteValmin, 255));
     for (int i = 301; i > 0; i--) {
-      hchaos1[i] = hchaos1[(i - 1)];
-      schaos1[i] = schaos1[(i - 1)];
-      vchaos1[i] = vchaos1[(i - 1)];
+      leds_ChaosHSV[i] = leds_ChaosHSV[(i - 1)];
     }
   }
-
-
-
 }
 
 
@@ -543,15 +477,11 @@ void hueTrain() {
   // Fill with Hues for first run
   if (hueTrainRan == false) {
     for (int i = 0; i < (NUM_LEDS + 2); i++) {
-      hchaos1[i] = random8(HueMin, HueMax);
-      schaos1[i] = random8(SatMin, SatMax);
-      vchaos1[i] = random8(BriMin, BriMax);
-      hchaos2[i] = random8(HueMin, HueMax);
-      schaos2[i] = random8(SatMin, SatMax);
-      vchaos2[i] = random8(BriMin, BriMax);
+      leds_ChaosHSV[i] = CHSV(random8(), random8(whiteSatmax), random8(whiteValmin, 255));
+      
     }
     for (int i = NUM_LEDS; i > 0; i--) {
-      leds[i] = CHSV((int)hchaos1, (int)schaos1, (int)vchaos1);
+      leds[i] = leds_ChaosHSV[i];
     }
     hueTrainRan = true;
     fade = 0;
@@ -567,7 +497,7 @@ void hueTrain() {
 
   // Update each LED to be a fade between two values
   for (int i = 0; i < 300; i++) {
-    leds[i] = blend(CHSV(hchaos1[(i + 2)], schaos1[(i + 2)], vchaos1[(i + 2)]), CHSV(hchaos1[(i + 1)], schaos1[(i + 1)], vchaos1[(i + 1)]), ease8InOutQuad(fade), SHORTEST_HUES);
+    leds[i] = blend(leds_ChaosHSV[(i + 2)], leds_ChaosHSV[(i + 1)], ease8InOutQuad(fade));
   }
 
 
@@ -576,38 +506,13 @@ void hueTrain() {
     fade = 0; // Reset fade
 
     // Create a new random value for the first entry
-    hchaos1[i] = random8(HueMin, HueMax);
-    schaos1[i] = random8(SatMin, SatMax);
-    vchaos1[i] = random8(BriMin, BriMax);
+    leds_ChaosHSV[0] = CHSV(random8(HueMin, HueMax), random8(SatMin, SatMax), random8(BriMin, BriMax));
 
     // Move values over one
     for (int i = 301; i > 0; i--) {
-      hchaos1[i] = hchaos1[(i - 1)];
-      schaos1[i] = schaos1[(i - 1)];
-      vchaos1[i] = vchaos1[(i - 1)];
+      leds_ChaosHSV[i] = leds_ChaosHSV[(i - 1)];
     }
   }
-
-
-
-}
-
-
-
-// Allblue is actually just a test loop
-void allblue () {
-  for (int i = 0; i < 100; i++) {
-    leds[i] = CRGB(i, 0, 255);
-  }
-  for (int i = 0; i < 100; i++) {
-    leds[i + 100] = CRGB(255, i, 0);
-  }
-  for (int i = 0; i < 100; i++) {
-    leds[i + 200] = CRGB(0, 255, i);
-  }
-
-
-
 }
 
 
