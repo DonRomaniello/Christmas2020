@@ -288,6 +288,24 @@ void settings() {
   period = oldPositionBottom;
 }
 
+// Color Correction
+
+void corrections () {
+
+  if (correctionLatch == false) {
+    FastLED.setCorrection( Candle );
+  }
+
+
+  if (correctionLatch == true) {
+    LEDS.setCorrection( Halogen );
+  }
+
+  if (millis() > time_now3 + period3) {
+    time_now3 = millis();
+    correctionLatch = !(correctionLatch);
+  }
+}
 
 
 void knobs() {
@@ -308,8 +326,15 @@ void clickers() {
   buttonTop.Update();
   buttonBottom.Update();
   // Save click codes in LEDfunction, as click codes are reset at next Update()
-  if (buttonTop.clicks != 0) clickerTop = buttonTop.clicks;
-  if (buttonBottom.clicks != 0) clickerBottom = buttonBottom.clicks;
+  if (buttonTop.clicks != 0) {
+    clickerTop = buttonTop.clicks;
+    inputsChanged == true;
+    
+  }
+  if (buttonBottom.clicks != 0) {
+    clickerBottom = buttonBottom.clicks;
+    inputsChanged == true;
+  }
 
 }
 
@@ -590,27 +615,6 @@ void rgbGradient () {
     colB = colD;
     hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colD);
 
-  }
-}
-
-
-
-// Color Correction
-
-void corrections () {
-
-  if (correctionLatch == false) {
-    FastLED.setCorrection( Candle );
-  }
-
-
-  if (correctionLatch == true) {
-    LEDS.setCorrection( Halogen );
-  }
-
-  if (millis() > time_now3 + period3) {
-    time_now3 = millis();
-    correctionLatch = !(correctionLatch);
   }
 }
 
