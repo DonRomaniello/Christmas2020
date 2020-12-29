@@ -97,6 +97,8 @@ bool correctionLatch = false;
 bool inputsChanged = true;
 bool timeoutRunning = false;
 int oled_refresh = 0;
+int aMode = 0;
+int modes = 7;
 
 
 
@@ -259,16 +261,22 @@ void setup() {
 
 void loop() {
 
+
+
+
   inputs();
   settings();
   oled();
   t.update();
-  //whiteTrain();
-  //colordrops();
-  //train();
-  //hueTrain();
-  //hsvGradient();
   rgbGradient();
+
+  if ((aMode % modes) == 0) rgbGradient();
+  else if ((aMode % modes) == 1) hsvGradient();
+  else if ((aMode % modes) == 2) whiteTrain();
+  else if ((aMode % modes) == 3) colorDrops();
+  else if ((aMode % modes) == 4) train();
+  else if ((aMode % modes) == 5) hueTrain();
+  else colorDrops();
   //ledSelect();
 }
 
@@ -286,6 +294,10 @@ void inputs() {
 void settings() {
   FastLED.setBrightness(  oldPositionTop );
   period = oldPositionBottom;
+  if (clickerTop == 1){
+    aMode++;
+    clickerTop = 0;
+  }
 }
 
 // Color Correction
@@ -325,22 +337,25 @@ void knobs() {
 void clickers() {
   buttonTop.Update();
   buttonBottom.Update();
-  // Save click codes in LEDfunction, as click codes are reset at next Update()
+  // Save click codes in function, as click codes are reset at next Update()
   if (buttonTop.clicks != 0) {
-    clickerTop = buttonTop.clicks;
-    inputsChanged == true;
-    
+    clickerTop = buttonTop.clicks; 
+    inputsChanged = true;
   }
   if (buttonBottom.clicks != 0) {
     clickerBottom = buttonBottom.clicks;
-    inputsChanged == true;
+    inputsChanged = true;
   }
 
 }
 
 void oled() {
-  timeout();
+  //timeout();
   oled_display();
+  display.clearDisplay();
+//  display.setCursor(0, 0);            // Start at top-left corner
+//  display.print(aMode);
+  display.display();
 }
 
 void timeout() {
@@ -382,7 +397,7 @@ void info(const char* fieldA, float valueA, const char* unitA, const char* field
 
 /* Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops */
 
-void colordrops() {
+void colorDrops() {
   trainRan = false;
   hdRan = false;
   pdRan = false;
