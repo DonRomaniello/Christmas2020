@@ -268,8 +268,10 @@ void loop() {
   settings();
   oled();
   t.update();
-  rgbGradient();
+  if (paused == false) modeSelect();
+}
 
+void modeSelect(){
   if ((aMode % modes) == 0) rgbGradient();
   else if ((aMode % modes) == 1) hsvGradient();
   else if ((aMode % modes) == 2) whiteTrain();
@@ -279,7 +281,6 @@ void loop() {
   else colorDrops();
   //ledSelect();
 }
-
 
 void showleds(void *context)
 {
@@ -297,6 +298,10 @@ void settings() {
   if (clickerTop == 1){
     aMode++;
     clickerTop = 0;
+  }
+  if (clickerBottom == 1) {
+    paused = !paused;
+    clickerBottom = 0;
   }
 }
 
@@ -323,7 +328,7 @@ void corrections () {
 void knobs() {
   newPositionTop  = topKnob.read();
   newPositionBottom  = bottomKnob.read();
-  if (newPositionTop != oldPositionTop) {    
+  if (newPositionTop != oldPositionTop) {
     if (newPositionTop < 0) newPositionTop = 0;
     if (newPositionTop > 255) newPositionTop = 255;
     oldPositionTop = newPositionTop;
@@ -332,6 +337,7 @@ void knobs() {
   if (newPositionBottom != oldPositionBottom) {
     if (clickerBottom == 0) { // If the mode is default, make the bottom knob change by twentieths of a second
       oldPositionBottom = (((newPositionBottom - oldPositionBottom) * 12.5) + oldPositionBottom);
+      if (oldPositionBottom < 50) oldPositionBottom = 50;
       bottomKnob.write(oldPositionBottom);
     }
     else oldPositionBottom = newPositionBottom;
@@ -379,8 +385,8 @@ void oled() {
   timeout();
   if (timedOut == false) {
     float brightReport = ((float) oldPositionTop / 2.55);
-    float cpsReport = ((float) oldPositionBottom / 1000);
-    info("Brightness:", brightReport, "%", "Speed", cpsReport, "CPS");  
+    float spcReport = ((float) oldPositionBottom / 1000);
+    info("Brightness:", brightReport, "%", "Speed", spcReport, "SPC");  
   }
   oled_display();
 
