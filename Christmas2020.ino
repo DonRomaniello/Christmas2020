@@ -332,6 +332,8 @@ void knobs() {
     inputsChanged = true;
   }
 
+
+
 }
 
 void clickers() {
@@ -349,14 +351,6 @@ void clickers() {
 
 }
 
-void oled() {
-  //timeout();
-  oled_display();
-  display.clearDisplay();
-//  display.setCursor(0, 0);            // Start at top-left corner
-//  display.print(aMode);
-  display.display();
-}
 
 void timeout() {
 
@@ -370,6 +364,15 @@ void timeout() {
 
 }
 
+
+
+void oled() {
+  timeout();
+  info("Brightness:", oldPositionTop, "/255", "Speed", oldPositionBottom, "CPS");
+  oled_display();
+
+}
+ 
 void oled_display() {
   // To avoid excessive updates of the OLED display, refresh at a lower rate
   if ( OLED_FPU == oled_refresh) {
@@ -379,9 +382,10 @@ void oled_display() {
   else {
     oled_refresh++;
   }
-}
+}\
 
 void info(const char* fieldA, float valueA, const char* unitA, const char* fieldB, float valueB, const char* unitB) {
+  display.clearDisplay();
   display.setCursor(0, 0);            // Start at top-left corner
   display.print(fieldA);
   display.setCursor(70, 0);
