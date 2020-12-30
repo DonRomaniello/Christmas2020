@@ -323,12 +323,18 @@ void corrections () {
 void knobs() {
   newPositionTop  = topKnob.read();
   newPositionBottom  = bottomKnob.read();
-  if (newPositionTop != oldPositionTop) {
+  if (newPositionTop != oldPositionTop) {    
+    if (newPositionTop < 0) newPositionTop = 0;
+    if (newPositionTop > 255) newPositionTop = 255;
     oldPositionTop = newPositionTop;
     inputsChanged = true;
   }
   if (newPositionBottom != oldPositionBottom) {
-    oldPositionBottom = newPositionBottom;
+    if (clickerBottom == 0) { // If the mode is default, make the bottom knob change by twentieths of a second
+      oldPositionBottom = (((newPositionBottom - oldPositionBottom) * 12.5) + oldPositionBottom);
+      bottomKnob.write(oldPositionBottom);
+    }
+    else oldPositionBottom = newPositionBottom;
     inputsChanged = true;
   }
 
@@ -372,7 +378,9 @@ void timeout() {
 void oled() {
   timeout();
   if (timedOut == false) {
-    info("Brightness:", oldPositionTop, "/255", "Speed", (oldPositionBottom / 1000), "CPS");  
+    float brightReport = ((float) oldPositionTop / 2.55);
+    float cpsReport = ((float) oldPositionBottom / 1000);
+    info("Brightness:", brightReport, "%", "Speed", cpsReport, "CPS");  
   }
   oled_display();
 
