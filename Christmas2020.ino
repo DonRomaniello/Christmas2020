@@ -31,7 +31,7 @@ int BRIGHTNESS = 64;
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, 4);
-unsigned long displayTimeout = (60 * 1000);
+unsigned long displayTimeout = (5 * 1000);
 
 // Led stuff
 const int numPins = 3;
@@ -95,7 +95,7 @@ bool ledSelectRan = false;
 bool paused = false;
 bool correctionLatch = false;
 bool inputsChanged = true;
-bool timeoutRunning = false;
+bool timedOut = false;
 int oled_refresh = 0;
 int aMode = 0;
 int modes = 7;
@@ -357,9 +357,12 @@ void timeout() {
   if (inputsChanged == true) {
     displayTimeoutTimer = millis();
     inputsChanged = false;
+    timedOut = false;
   }
   else if ((millis() - displayTimeoutTimer) >= displayTimeout) {
     display.clearDisplay();
+    display.display();
+    timedOut = true;
   }
 
 }
@@ -368,7 +371,9 @@ void timeout() {
 
 void oled() {
   timeout();
-  info("Brightness:", oldPositionTop, "/255", "Speed", oldPositionBottom, "CPS");
+  if (timedOut == false) {
+    info("Brightness:", oldPositionTop, "/255", "Speed", (oldPositionBottom / 1000), "CPS");  
+  }
   oled_display();
 
 }
@@ -382,16 +387,15 @@ void oled_display() {
   else {
     oled_refresh++;
   }
-}\
+}
 
 void info(const char* fieldA, float valueA, const char* unitA, const char* fieldB, float valueB, const char* unitB) {
-  display.clearDisplay();
+  display.clearDisplay(); 
   display.setCursor(0, 0);            // Start at top-left corner
   display.print(fieldA);
   display.setCursor(70, 0);
   display.print(valueA);
   display.print(unitA);
-
   display.setCursor(0, 12);
   display.print(fieldB);
   display.setCursor(70, 12);
