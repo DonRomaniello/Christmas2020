@@ -111,6 +111,7 @@ unsigned long loopsPerSecondTimer = 0;
 // Speed
 long period = 1000;
 unsigned long loopsPerSecond = 0;
+unsigned long LPSmax = 0;
 
 
 // Values That Need Be addressed
@@ -261,7 +262,6 @@ void setup() {
 void loop() {
   
   inputs();
-  speedTest();
   settings();
   oled();
   t.update();
@@ -303,8 +303,9 @@ void settings() {
 }
 
 void speedTest() {
-  if (millis() > loopsPerSecondTimer + 1000) { //check to see if a 'tick' has happened
+  if (millis() > loopsPerSecondTimer + 1000) { //measure one second
     loopsPerSecondTimer = millis();
+    LPSmax = loopsPerSecond;
     loopsPerSecond = 0;
   }
   loopsPerSecond++;
@@ -372,7 +373,7 @@ void oled() {
   if (timedOut == false) {
     float brightReport = ((float) oldPositionTop / 2.55);
     float spcReport = ((float) oldPositionBottom / 1000);
-    info("Brightness:", brightReport, "%", "Speed", spcReport, "SPC", "Looping:", loopsPerSecond, NULL);  
+    twoInfo("Brightness:", brightReport, "%", "Speed", spcReport, " SPC");  
   }
   oled_display();
 
@@ -389,7 +390,25 @@ void oled_display() {
   }
 }
 
-void info(const char* fieldA, float valueA, const char* unitA,
+void twoInfo(const char* fieldA, float valueA, const char* unitA,
+const char* fieldB, float valueB, const char* unitB) {
+  
+  display.clearDisplay(); 
+  display.setCursor(0, 0);            // Start at top-left corner
+  display.print(fieldA);
+  display.setCursor(70, 0);
+  display.print(valueA);
+  display.print(unitA);
+  
+  display.setCursor(0, 12);
+  display.print(fieldB);
+  display.setCursor(70, 12);
+  display.print(valueB);
+  display.print(unitB);
+}
+
+
+void threeInfo(const char* fieldA, float valueA, const char* unitA,
 const char* fieldB, float valueB, const char* unitB,
 const char* fieldC, unsigned long valueC, const char* unitC) {
   
