@@ -5,16 +5,16 @@ Serial.begin(9600);
 
 }
 
-int (*functptr[])(int a, int b) = { funkyAdd, funkySub, funkyMul, funkyDiv } ;
+int (*modeSelect[])(int a, int b) = { funkyAdd, funkySub, funkyMul, funkyDiv } ;
 
 
 void loop() {
   // put your main code here, to run repeatedly:
   
-Serial.println((*functptr[0])(16, 2));
-Serial.println((*functptr[1])(16, 2));
-Serial.println((*functptr[2])(16, 2));
-Serial.println((*functptr[3])(16, 2));
+Serial.println((*modeSelect[0])(16, 2));
+Serial.println((*modeSelect[1])(16, 2));
+Serial.println((*modeSelect[2])(16, 2));
+Serial.println((*modeSelect[3])(16, 2));
 
 delay(1000);
 

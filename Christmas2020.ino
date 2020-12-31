@@ -23,7 +23,7 @@ int BRIGHTNESS = 64;
 #define DATA_PIN_TOP 20
 
 #define FPS 240
-#define OLED_FPU (240 / 30)
+#define OLED_FPU 30
 #define NUM_LEDS 300
 
 
@@ -31,7 +31,7 @@ int BRIGHTNESS = 64;
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, 4);
-unsigned long displayTimeout = (5 * 1000);
+
 
 // Led stuff
 const int numPins = 3;
@@ -96,7 +96,6 @@ bool paused = false;
 bool correctionLatch = false;
 bool inputsChanged = true;
 bool timedOut = false;
-int oled_refresh = 0;
 int aMode = 0;
 int modes = 7;
 
@@ -107,6 +106,7 @@ int modes = 7;
 unsigned long time_now = 0;
 unsigned long displayTimeoutTimer = 0;
 unsigned long loopsPerSecondTimer = 0;
+unsigned long displayTimeout = (5 * 1000);
 
 // Speed
 long period = 1000;
@@ -162,8 +162,9 @@ Encoder bottomKnob(9, 10);
 
 // Write positions to represent hardcoded brightness and period settings
 
+long periodMultiplier = 25;
 long oldPositionTop  = BRIGHTNESS;
-long oldPositionBottom  = period;
+long oldPositionBottom  = (period / periodMultiplier);
 long newPositionTop = oldPositionTop;
 long newPositionBottom = oldPositionBottom;
 
@@ -176,8 +177,9 @@ int clickerTop = 0;
 int clickerBottom = 0;
 
 
-//Declare that there will be a timer, 't'
-Timer t;
+//Timers for leds and oledRefresh
+Timer ledShow;
+Timer oledShow;
 
 //
 //  /$$$$$$ /$$$$$$$$/$$$$$$$$/$$   /$$/$$$$$$$
@@ -188,6 +190,8 @@ Timer t;
 // /$$  \ $| $$        | $$  | $$  | $| $$
 //|  $$$$$$| $$$$$$$$  | $$  |  $$$$$$| $$
 // \______/|________/  |__/   \______/|__/
+
+
 
 
 void setup() {
@@ -224,11 +228,12 @@ void setup() {
   gradBottomB = CHSV(random8(), random8(128, 255), 255);
 
   // Set Up Loop that runs every frame (FPS)
-  t.every((1000 / FPS), showleds, (void*)0);
+  ledShow.every((1000 / FPS), showleds, (void*)0);
+  oledShow.every((1000 / OLED_FPU), oledRefresh, (void*)0);
 
   // Knobs
-  topKnob.write(BRIGHTNESS);
-  bottomKnob.write(period);
+  topKnob.write(oldPositionTop);
+  bottomKnob.write(oldPositionBottom);
 
 
 
@@ -259,30 +264,25 @@ void setup() {
 //  EEEE N   N DDD      SSSS  EEEE   TT    UUU  P
 //
 
-void loop() {
-  
-  inputs();
-  settings();
-  oled();
-  t.update();
-  if (paused == false) modeSelect();
-}
-
-void modeSelect(){
-  if ((aMode % modes) == 0) rgbGradient();
-  else if ((aMode % modes) == 1) hsvGradient();
-  else if ((aMode % modes) == 2) whiteTrain();
-  else if ((aMode % modes) == 3) colorDrops();
-  else if ((aMode % modes) == 4) train();
-  else if ((aMode % modes) == 5) hueTrain();
-  else colorDrops();
-  //ledSelect();
-}
 
 void showleds(void *context)
 {
   FastLED.show();
 }
+
+
+void oledRefresh(void *context)
+{
+  display.display();
+}
+
+
+void timerUpdates(){
+  ledShow.update();
+  oledShow.update();
+}
+
+
 
 void inputs() {
   knobs();
@@ -291,7 +291,7 @@ void inputs() {
 
 void settings() {
   FastLED.setBrightness(  oldPositionTop );
-  period = oldPositionBottom;
+  period = (oldPositionBottom * periodMultiplier);
   if (clickerTop == 1){
     aMode++;
     clickerTop = 0;
@@ -322,13 +322,9 @@ void knobs() {
     inputsChanged = true;
   }
   if (newPositionBottom != oldPositionBottom) {
-    if (clickerBottom == 0) { // If the mode is default, make the bottom knob change by twentieths of a second
-      oldPositionBottom = (((newPositionBottom - oldPositionBottom) * 12.5) + oldPositionBottom);
-      if (oldPositionBottom < 50) oldPositionBottom = 50;
-      bottomKnob.write(oldPositionBottom);
-    }
-    else oldPositionBottom = newPositionBottom;
+    if (newPositionBottom < 0) newPositionBottom = 0;
     inputsChanged = true;
+    oldPositionBottom = newPositionBottom;
   }
 
 
@@ -360,7 +356,6 @@ void timeout() {
   }
   else if ((millis() - displayTimeoutTimer) >= displayTimeout) {
     display.clearDisplay();
-    display.display();
     timedOut = true;
   }
 
@@ -371,25 +366,13 @@ void timeout() {
 void oled() {
   timeout();
   if (timedOut == false) {
-    float brightReport = ((float) oldPositionTop / 2.55);
-    float spcReport = ((float) oldPositionBottom / 1000);
+    float brightReport = ((float) FastLED.getBrightness() / 2.55);
+    float spcReport = ((float) period / 1000);
     twoInfo("Brightness:", brightReport, "%", "Speed", spcReport, " SPC");  
   }
-  oled_display();
 
 }
  
-void oled_display() {
-  // To avoid excessive updates of the OLED display, refresh at a lower rate
-  if ( OLED_FPU == oled_refresh) {
-    display.display();
-    oled_refresh = 0;
-  }
-  else {
-    oled_refresh++;
-  }
-}
-
 void twoInfo(const char* fieldA, float valueA, const char* unitA,
 const char* fieldB, float valueB, const char* unitB) {
   
@@ -434,6 +417,72 @@ const char* fieldC, unsigned long valueC, const char* unitC) {
 
   
 }
+
+//
+// /$$      /$$  /$$$$$$  /$$$$$$$  /$$$$$$$$  /$$$$$$ 
+//| $$$    /$$$ /$$__  $$| $$__  $$| $$_____/ /$$__  $$
+//| $$$$  /$$$$| $$  \ $$| $$  \ $$| $$      | $$  \__/
+//| $$ $$/$$ $$| $$  | $$| $$  | $$| $$$$$   |  $$$$$$ 
+//| $$  $$$| $$| $$  | $$| $$  | $$| $$__/    \____  $$
+//| $$\  $ | $$| $$  | $$| $$  | $$| $$       /$$  \ $$
+//| $$ \/  | $$|  $$$$$$/| $$$$$$$/| $$$$$$$$|  $$$$$$/
+//|__/     |__/ \______/ |_______/ |________/ \______/ 
+//                                                     
+
+
+
+
+void rgbGradient () {
+
+  if (rgbGradientran == false) {
+    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colA);
+    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colB);
+    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colC);
+    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colD);
+    rgbGradientran = true;
+  }
+
+
+  if (millis() > time_now + period) {
+    time_now = millis();
+    fade++;
+  }
+
+  
+  //fill_gradient_RGB(leds, 0, blend (colA, colC, ease8InOutQuad(fade)), NUM_LEDS, blend (colB, colD, ease8InOutQuad(fade)));
+
+
+
+  CRGB layer0_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 28);
+  CRGB layer1_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 57);
+  CRGB layer2_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 85);
+  CRGB layer3_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 114);
+  
+// Layer 0
+  fill_gradient_RGB(leds, 0, (blend (colA, colC, ease8InOutQuad(fade))), 48, layer0_End);
+// Layer 1
+  fill_gradient_RGB(leds, 49, layer0_End, 97, layer1_End);
+// Layer 2
+  fill_gradient_RGB(leds, 98, layer1_End, 145, layer2_End);
+// Layer 3
+  fill_gradient_RGB(leds, 146, layer2_End, 193, layer3_End);
+// Top
+  fill_gradient_RGB(leds, 194, layer3_End, NUM_LEDS, blend (colB, colD, ease8InOutQuad(fade)));
+
+  if (fade == 255) {
+    fade = 0;
+    colA = colC;
+    random16_set_seed(Entropy.random(WDT_RETURN_WORD));
+    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colC);
+
+    colB = colD;
+    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colD);
+
+  }
+}
+
+
+
 
 /* Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops */
 
@@ -611,58 +660,6 @@ void hsvGradient () {
 }
 
 
-
-void rgbGradient () {
-
-  if (rgbGradientran == false) {
-    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colA);
-    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colB);
-    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colC);
-    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colD);
-    rgbGradientran = true;
-  }
-
-
-  if (millis() > time_now + period) {
-    time_now = millis();
-    fade++;
-  }
-
-  
-  //fill_gradient_RGB(leds, 0, blend (colA, colC, ease8InOutQuad(fade)), NUM_LEDS, blend (colB, colD, ease8InOutQuad(fade)));
-
-
-
-  CRGB layer0_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 28);
-  CRGB layer1_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 57);
-  CRGB layer2_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 85);
-  CRGB layer3_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 114);
-  
-// Layer 0
-  fill_gradient_RGB(leds, 0, (blend (colA, colC, ease8InOutQuad(fade))), 48, layer0_End);
-// Layer 1
-  fill_gradient_RGB(leds, 49, layer0_End, 97, layer1_End);
-// Layer 2
-  fill_gradient_RGB(leds, 98, layer1_End, 145, layer2_End);
-// Layer 3
-  fill_gradient_RGB(leds, 146, layer2_End, 193, layer3_End);
-// Top
-  fill_gradient_RGB(leds, 194, layer3_End, NUM_LEDS, blend (colB, colD, ease8InOutQuad(fade)));
-
-  if (fade == 255) {
-    fade = 0;
-    colA = colC;
-    random16_set_seed(Entropy.random(WDT_RETURN_WORD));
-    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colC);
-
-    colB = colD;
-    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colD);
-
-  }
-}
-
-
-
 void ledSelect () {
   if (ledSelectRan == false) {
     topKnob.write(0);
@@ -681,4 +678,20 @@ void ledSelect () {
   display.print((topKnob.read()/4));
   display.display();
   
+}
+
+
+
+
+void (*modeSelect[])() = { rgbGradient, hsvGradient, whiteTrain, colorDrops, train, hueTrain, colorDrops } ;
+
+void loop() {
+  
+  inputs();
+  settings();
+  oled();
+  timerUpdates();
+  if (paused == false) {
+    (*modeSelect[(aMode % modes)])();
+  }
 }
