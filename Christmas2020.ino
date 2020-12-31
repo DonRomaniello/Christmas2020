@@ -105,14 +105,13 @@ int modes = 7;
 
 // Timers
 unsigned long time_now = 0;
-unsigned long time_now2 = 0;
-unsigned long time_now3 = 0;
 unsigned long displayTimeoutTimer = 0;
+unsigned long loopsPerSecondTimer = 0;
 
 // Speed
 long period = 1000;
-long period2 = 1000;
-long period3 = 1000;
+unsigned long loopsPerSecond = 0;
+
 
 // Values That Need Be addressed
 int changer = 0;
@@ -260,11 +259,9 @@ void setup() {
 //
 
 void loop() {
-
-
-
-
+  
   inputs();
+  speedTest();
   settings();
   oled();
   t.update();
@@ -305,23 +302,12 @@ void settings() {
   }
 }
 
-// Color Correction
-
-void corrections () {
-
-  if (correctionLatch == false) {
-    FastLED.setCorrection( Candle );
+void speedTest() {
+  if (millis() > loopsPerSecondTimer + 1000) { //check to see if a 'tick' has happened
+    loopsPerSecondTimer = millis();
+    loopsPerSecond = 0;
   }
-
-
-  if (correctionLatch == true) {
-    LEDS.setCorrection( Halogen );
-  }
-
-  if (millis() > time_now3 + period3) {
-    time_now3 = millis();
-    correctionLatch = !(correctionLatch);
-  }
+  loopsPerSecond++;
 }
 
 
@@ -386,7 +372,7 @@ void oled() {
   if (timedOut == false) {
     float brightReport = ((float) oldPositionTop / 2.55);
     float spcReport = ((float) oldPositionBottom / 1000);
-    info("Brightness:", brightReport, "%", "Speed", spcReport, "SPC");  
+    info("Brightness:", brightReport, "%", "Speed", spcReport, "SPC", "Looping:", loopsPerSecond, NULL);  
   }
   oled_display();
 
@@ -403,18 +389,31 @@ void oled_display() {
   }
 }
 
-void info(const char* fieldA, float valueA, const char* unitA, const char* fieldB, float valueB, const char* unitB) {
+void info(const char* fieldA, float valueA, const char* unitA,
+const char* fieldB, float valueB, const char* unitB,
+const char* fieldC, unsigned long valueC, const char* unitC) {
+  
   display.clearDisplay(); 
   display.setCursor(0, 0);            // Start at top-left corner
   display.print(fieldA);
   display.setCursor(70, 0);
   display.print(valueA);
   display.print(unitA);
+  
   display.setCursor(0, 12);
   display.print(fieldB);
   display.setCursor(70, 12);
   display.print(valueB);
   display.print(unitB);
+  
+  display.setCursor(0, 24);
+  display.print(fieldC);
+  display.setCursor(70, 24);
+  display.print(valueC);
+  display.print(unitC);
+
+
+  
 }
 
 /* Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops */
@@ -423,9 +422,6 @@ void colorDrops() {
   trainRan = false;
   hdRan = false;
   pdRan = false;
-
-
-
 
   if (cdRan == false) {
     for (int i = 0; i < NUM_LEDS; i++) {
@@ -437,22 +433,13 @@ void colorDrops() {
   if (millis() > time_now + period) { //check to see if a 'tick' has happened
     time_now = millis();
     i = random16(NUM_LEDS); // Choose a random LED
-
-    changer = random8();
-    changeg = random8();
-    changeb = random8();
-
-
-
-    colA = CRGB(changer, changeg, changeb);
+    colA = CRGB(random8(), random8(), random8()); // Make a random color
   }
 
 
-
-
-  if (millis() > time_now2 + (period / 255)) {
+  if (millis() > time_now + (period / 255)) {
     leds[i] = blend(leds[i], colA, fade);
-    time_now2 = millis();
+    time_now = millis();
     fade++;
   }
   if (fade == 255) fade = 0;
