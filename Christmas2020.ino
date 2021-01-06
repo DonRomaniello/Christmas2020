@@ -91,6 +91,7 @@ bool hueTrainRan = false; // Has Hue Train run
 bool hsvGradientran = false; // Has the hsvGradient run
 bool rgbGradientran = false; //Has the rgbGradient run
 bool ledSelectRan = false;
+bool topBottomLatch = true;
 
 bool paused = false;
 bool correctionLatch = false;
@@ -437,7 +438,7 @@ void rgbGradient () {
   if (rgbGradientran == false) {
     hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colA);
     hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colB);
-    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colC);
+    colC = colA;
     hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colD);
     rgbGradientran = true;
   }
@@ -449,8 +450,6 @@ void rgbGradient () {
   }
 
   
-  //fill_gradient_RGB(leds, 0, blend (colA, colC, ease8InOutQuad(fade)), NUM_LEDS, blend (colB, colD, ease8InOutQuad(fade)));
-
 
 
   CRGB layer0_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 28);
@@ -471,12 +470,17 @@ void rgbGradient () {
 
   if (fade == 255) {
     fade = 0;
-    colA = colC;
     random16_set_seed(Entropy.random(WDT_RETURN_WORD));
-    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colC);
+    if (topBottomLatch == true) {
+      colB = colD;
+      hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colC);
+    }
 
-    colB = colD;
-    hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colD);
+    if (topBottomLatch == false) {
+      colA = colC;
+      hsv2rgb_rainbow(CHSV(random8(), random8(128, 255), 255), colD);
+    }
+    topBottomLatch = !topBottomLatch;
 
   }
 }
