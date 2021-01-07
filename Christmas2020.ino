@@ -38,8 +38,8 @@ const int numPins = 3;
 byte pinList[numPins] = {DATA_PIN_BOTTOM, DATA_PIN_MIDDLE, DATA_PIN_TOP};
 const int ledsPerStrip = 100;
 CRGB leds[numPins * ledsPerStrip];
-CRGB leds_B[numPins * ledsPerStrip]; // Also create non-displayed LED arrays for holding effects
-CRGB leds_C[numPins * ledsPerStrip];  // ...
+CRGB leds_Base[numPins * ledsPerStrip]; // Also create non-displayed LED arrays for holding base layer
+CRGB leds_Effects[numPins * ledsPerStrip];  // Create effects layer
 CRGB leds_ChaosRGB[numPins * ledsPerStrip + 2]; // chaos arrays
 CRGB leds_ChaosHSV[numPins * ledsPerStrip + 2]; // ...
 
@@ -215,7 +215,9 @@ void setup() {
   for (int i = 0; i < (NUM_LEDS + 2); i++) {
     leds_ChaosRGB[i] = CRGB(random8(), random8(), random8());
     leds_ChaosHSV[i] = CRGB(random8(), random8(), random8());
-
+  }
+    for (int i = 0; i < (NUM_LEDS); i++) {
+    leds_Effects[i] = CRGB(random8(), random8(), random8());
   }
 
   colA = CRGB(random8(), random8(), random8());
@@ -458,15 +460,21 @@ void rgbGradient () {
   CRGB layer3_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 114);
   
 // Layer 0
-  fill_gradient_RGB(leds, 0, (blend (colA, colC, ease8InOutQuad(fade))), 48, layer0_End);
+  fill_gradient_RGB(leds_Base, 0, (blend (colA, colC, ease8InOutQuad(fade))), 48, layer0_End);
 // Layer 1
-  fill_gradient_RGB(leds, 49, layer0_End, 97, layer1_End);
+  fill_gradient_RGB(leds_Base, 49, layer0_End, 97, layer1_End);
 // Layer 2
-  fill_gradient_RGB(leds, 98, layer1_End, 145, layer2_End);
+  fill_gradient_RGB(leds_Base, 98, layer1_End, 145, layer2_End);
 // Layer 3
-  fill_gradient_RGB(leds, 146, layer2_End, 193, layer3_End);
+  fill_gradient_RGB(leds_Base, 146, layer2_End, 193, layer3_End);
 // Top
-  fill_gradient_RGB(leds, 194, layer3_End, NUM_LEDS, blend (colB, colD, ease8InOutQuad(fade)));
+  fill_gradient_RGB(leds_Base, 194, layer3_End, NUM_LEDS, blend (colB, colD, ease8InOutQuad(fade)));
+
+  for (int i = 0; i < NUM_LEDS; i++) {
+    leds[i] = blend(leds_Base[i], leds_Effects[i], 16);  
+  }
+  
+
 
   if (fade == 255) {
     fade = 0;
