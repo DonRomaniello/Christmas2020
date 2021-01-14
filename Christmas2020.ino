@@ -164,7 +164,8 @@ Encoder bottomKnob(9, 10);
 // Write positions to represent hardcoded brightness and period settings
 
 long periodMultiplier = 25;
-long oldPositionTop  = BRIGHTNESS;
+long brightnessDivider = 4;
+long oldPositionTop  = (BRIGHTNESS * brightnessDivider);
 long oldPositionBottom  = (period / periodMultiplier);
 long newPositionTop = oldPositionTop;
 long newPositionBottom = oldPositionBottom;
@@ -293,7 +294,7 @@ void inputs() {
 }
 
 void settings() {
-  FastLED.setBrightness(  oldPositionTop );
+  FastLED.setBrightness(  oldPositionTop / brightnessDivider );
   period = (oldPositionBottom * periodMultiplier);
   if (clickerTop == 1){
     aMode++;
