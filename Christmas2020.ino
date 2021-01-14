@@ -22,7 +22,7 @@ int BRIGHTNESS = 64;
 #define DATA_PIN_MIDDLE 17
 #define DATA_PIN_TOP 20
 
-#define FPS 240
+#define FPS 160
 #define OLED_FPU 30
 #define NUM_LEDS 300
 
@@ -110,7 +110,7 @@ unsigned long loopsPerSecondTimer = 0;
 unsigned long displayTimeout = (5 * 1000);
 
 // Speed
-long period = 1000;
+long period = 5000;
 unsigned long loopsPerSecond = 0;
 unsigned long LPSmax = 0;
 
