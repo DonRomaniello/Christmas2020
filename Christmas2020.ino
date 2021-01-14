@@ -321,7 +321,7 @@ void knobs() {
   newPositionBottom  = bottomKnob.read();
   if (newPositionTop != oldPositionTop) {
     if (newPositionTop < 0) newPositionTop = 0;
-    if (newPositionTop > 255) newPositionTop = 255;
+    if (newPositionTop > (255 * brightnessDivider)) newPositionTop = (255 * brightnessDivider);
     oldPositionTop = newPositionTop;
     inputsChanged = true;
   }
