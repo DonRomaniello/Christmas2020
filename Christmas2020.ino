@@ -15,7 +15,7 @@
 
 
 
-#define COLOR_CORRECTION Candle
+#define COLOR_CORRECTION DirectSunlight
 int BRIGHTNESS = 64;
 
 #define DATA_PIN_BOTTOM 1
@@ -100,9 +100,6 @@ bool timedOut = false;
 int aMode = 0;
 int modes = 7;
 
-
-
-
 // Timers
 unsigned long time_now = 0;
 unsigned long displayTimeoutTimer = 0;
@@ -114,12 +111,10 @@ long period = 5000;
 unsigned long loopsPerSecond = 0;
 unsigned long LPSmax = 0;
 
-
 // Values That Need Be addressed
 int changer = 0;
 int changeg = 0;
 int changeb = 0;
-
 int raw = 255;
 int gaw = 255;
 int baw = 255;
