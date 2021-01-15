@@ -12,9 +12,6 @@
 #include "Timer.h"
 #include "ClickButton.h"
 
-
-
-
 #define COLOR_CORRECTION DirectSunlight
 int BRIGHTNESS = 64;
 
@@ -92,7 +89,7 @@ bool hsvGradientran = false; // Has the hsvGradient run
 bool rgbGradientran = false; //Has the rgbGradient run
 bool ledSelectRan = false;
 bool topBottomLatch = true;
-
+bool effectFadeLatch = false;
 bool paused = false;
 bool correctionLatch = false;
 bool inputsChanged = true;
@@ -212,7 +209,7 @@ void setup() {
     leds_ChaosRGB[i] = CRGB(random8(), random8(), random8());
     leds_ChaosHSV[i] = CRGB(random8(), random8(), random8());
   }
-    for (int i = 0; i < (NUM_LEDS); i++) {
+  for (int i = 0; i < (NUM_LEDS); i++) {
     leds_Effects[i] = CRGB(random8(), random8(), random8());
   }
 
@@ -250,7 +247,7 @@ void setup() {
   // OLED Display
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.setRotation(2);
-  display.setTextSize(1);             
+  display.setTextSize(1);
   display.setTextColor(SSD1306_WHITE);
   display.clearDisplay();
 }
@@ -276,7 +273,7 @@ void oledRefresh(void *context)
 }
 
 
-void timerUpdates(){
+void timerUpdates() {
   ledShow.update();
   oledShow.update();
 }
@@ -291,7 +288,7 @@ void inputs() {
 void settings() {
   FastLED.setBrightness(  oldPositionTop / brightnessDivider );
   period = (oldPositionBottom * periodMultiplier);
-  if (clickerTop == 1){
+  if (clickerTop == 1) {
     aMode++;
     clickerTop = 0;
   }
@@ -335,7 +332,7 @@ void clickers() {
   buttonBottom.Update();
   // Save click codes in function, as click codes are reset at next Update()
   if (buttonTop.clicks != 0) {
-    clickerTop = buttonTop.clicks; 
+    clickerTop = buttonTop.clicks;
     inputsChanged = true;
   }
   if (buttonBottom.clicks != 0) {
@@ -367,21 +364,21 @@ void oled() {
   if (timedOut == false) {
     float brightReport = ((float) FastLED.getBrightness() / 2.55);
     float spcReport = ((float) period / 1000);
-    twoInfo("Brightness:", brightReport, "%", "Speed", spcReport, " SPC");  
+    twoInfo("Brightness:", brightReport, "%", "Speed", spcReport, " SPC");
   }
 
 }
- 
+
 void twoInfo(const char* fieldA, float valueA, const char* unitA,
-const char* fieldB, float valueB, const char* unitB) {
-  
-  display.clearDisplay(); 
+             const char* fieldB, float valueB, const char* unitB) {
+
+  display.clearDisplay();
   display.setCursor(0, 0);            // Start at top-left corner
   display.print(fieldA);
   display.setCursor(70, 0);
   display.print(valueA);
   display.print(unitA);
-  
+
   display.setCursor(0, 12);
   display.print(fieldB);
   display.setCursor(70, 12);
@@ -391,22 +388,22 @@ const char* fieldB, float valueB, const char* unitB) {
 
 
 void threeInfo(const char* fieldA, float valueA, const char* unitA,
-const char* fieldB, float valueB, const char* unitB,
-const char* fieldC, unsigned long valueC, const char* unitC) {
-  
-  display.clearDisplay(); 
+               const char* fieldB, float valueB, const char* unitB,
+               const char* fieldC, unsigned long valueC, const char* unitC) {
+
+  display.clearDisplay();
   display.setCursor(0, 0);            // Start at top-left corner
   display.print(fieldA);
   display.setCursor(70, 0);
   display.print(valueA);
   display.print(unitA);
-  
+
   display.setCursor(0, 12);
   display.print(fieldB);
   display.setCursor(70, 12);
   display.print(valueB);
   display.print(unitB);
-  
+
   display.setCursor(0, 24);
   display.print(fieldC);
   display.setCursor(70, 24);
@@ -414,21 +411,19 @@ const char* fieldC, unsigned long valueC, const char* unitC) {
   display.print(unitC);
 
 
-  
+
 }
 
 //
-// /$$      /$$  /$$$$$$  /$$$$$$$  /$$$$$$$$  /$$$$$$ 
+// /$$      /$$  /$$$$$$  /$$$$$$$  /$$$$$$$$  /$$$$$$
 //| $$$    /$$$ /$$__  $$| $$__  $$| $$_____/ /$$__  $$
 //| $$$$  /$$$$| $$  \ $$| $$  \ $$| $$      | $$  \__/
-//| $$ $$/$$ $$| $$  | $$| $$  | $$| $$$$$   |  $$$$$$ 
+//| $$ $$/$$ $$| $$  | $$| $$  | $$| $$$$$   |  $$$$$$
 //| $$  $$$| $$| $$  | $$| $$  | $$| $$__/    \____  $$
 //| $$\  $ | $$| $$  | $$| $$  | $$| $$       /$$  \ $$
 //| $$ \/  | $$|  $$$$$$/| $$$$$$$/| $$$$$$$$|  $$$$$$/
-//|__/     |__/ \______/ |_______/ |________/ \______/ 
-//                                                     
-
-
+//|__/     |__/ \______/ |_______/ |________/ \______/
+//
 
 
 void rgbGradient () {
@@ -441,39 +436,30 @@ void rgbGradient () {
     rgbGradientran = true;
   }
 
-
   if (millis() > time_now + period) {
     time_now = millis();
     fade++;
   }
 
-  
+  CRGB layer0_End = blend(blend (colA, colC, ease8InOutQuad(fade)), blend (colB, colD, ease8InOutQuad(fade)), 28);
+  CRGB layer1_End = blend(blend (colA, colC, ease8InOutQuad(fade)), blend (colB, colD, ease8InOutQuad(fade)), 57);
+  CRGB layer2_End = blend(blend (colA, colC, ease8InOutQuad(fade)), blend (colB, colD, ease8InOutQuad(fade)), 85);
+  CRGB layer3_End = blend(blend (colA, colC, ease8InOutQuad(fade)), blend (colB, colD, ease8InOutQuad(fade)), 114);
 
-
-  CRGB layer0_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 28);
-  CRGB layer1_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 57);
-  CRGB layer2_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 85);
-  CRGB layer3_End = blend(blend (colA, colC, ease8InOutQuad(fade)),blend (colB, colD, ease8InOutQuad(fade)), 114);
-  
-// Layer 0
+  // Layer 0
   fill_gradient_RGB(leds_Base, 0, (blend (colA, colC, ease8InOutQuad(fade))), 48, layer0_End);
-// Layer 1
+  // Layer 1
   fill_gradient_RGB(leds_Base, 49, layer0_End, 97, layer1_End);
-// Layer 2
+  // Layer 2
   fill_gradient_RGB(leds_Base, 98, layer1_End, 145, layer2_End);
-// Layer 3
+  // Layer 3
   fill_gradient_RGB(leds_Base, 146, layer2_End, 193, layer3_End);
-// Top
+  // Top
   fill_gradient_RGB(leds_Base, 194, layer3_End, NUM_LEDS, blend (colB, colD, ease8InOutQuad(fade)));
-
-  for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = blend(leds_Base[i], leds_Effects[i], 16);  
-  }
-  
-
 
   if (fade == 255) {
     fade = 0;
+    effectFadeLatch = true;
     random16_set_seed(Entropy.random(WDT_RETURN_WORD));
     if (topBottomLatch == true) {
       colB = colD;
@@ -490,8 +476,6 @@ void rgbGradient () {
 }
 
 
-
-
 /* Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops  Color Drops */
 
 void colorDrops() {
@@ -501,7 +485,7 @@ void colorDrops() {
 
   if (cdRan == false) {
     for (int i = 0; i < NUM_LEDS; i++) {
-      leds[i] = CRGB(random8(), random8(), random8());
+      leds_Base[i] = CRGB(random8(), random8(), random8());
     }
     cdRan = true;
   }
@@ -514,17 +498,16 @@ void colorDrops() {
 
 
   if (millis() > time_now + (period / 255)) {
-    leds[i] = blend(leds[i], colA, fade);
+    leds_Base[i] = blend(leds_Base[i], colA, fade);
     time_now = millis();
     fade++;
   }
-  if (fade == 255) fade = 0;
+  if (fade == 255) {
+    fade = 0;
+    effectFadeLatch = true;
+  }
 
 }
-
-
-
-
 
 // Train  Train  Train  Train  Train  Train  Train  Train  Train  Train  Train  Train  Train
 
@@ -533,29 +516,23 @@ void train() {
   hdRan = false;
   cdRan = false;
 
-
   if (millis() > time_now + period) {
     time_now = millis();
     fade++;
   }
 
-
-  for (int i = 0; i < 300; i++) {
-    leds[i] = blend(leds_ChaosRGB[(i + 2)], leds_ChaosRGB[(i + 1)], ease8InOutQuad(fade));
+  for (int i = 0; i < NUM_LEDS; i++) {
+    leds_Base[i] = blend(leds_ChaosRGB[(i + 2)], leds_ChaosRGB[(i + 1)], ease8InOutQuad(fade));
   }
-
-
-
 
   if (fade == 255) {
     fade = 0;
-    leds_ChaosRGB[0] = CRGB(random8(),random8(),random8());
+    effectFadeLatch = true;
+    leds_ChaosRGB[0] = CRGB(random8(), random8(), random8());
     for (int i = 301; i > 0; i--) {
       leds_ChaosRGB[i] = leds_ChaosRGB[(i - 1)];
     }
   }
-
-
 }
 
 
@@ -567,25 +544,24 @@ void whiteTrain() {
       leds_ChaosHSV[i] = CHSV(random8(), random8(whiteSatmax), random8(whiteValmin, 255));
     }
     for (int i = NUM_LEDS; i > 0; i--) {
-      leds[i] = leds_ChaosHSV[i];
+      leds_Base[i] = leds_ChaosHSV[i];
     }
     whiteTrainRan = true;
     fade = 0;
   }
 
-
-  //Non-blocking time check
   if (millis() > time_now + period) {
     time_now = millis();
     fade++;
   }
 
-  for (int i = 0; i < 300; i++) {
-    leds[i] = blend(leds_ChaosHSV[(i + 2)], leds_ChaosHSV[(i + 1)], ease8InOutQuad(fade));
+  for (int i = 0; i < NUM_LEDS; i++) {
+    leds_Base[i] = blend(leds_ChaosHSV[(i + 2)], leds_ChaosHSV[(i + 1)], ease8InOutQuad(fade));
   }
 
   if (fade == 255) {
     fade = 0; // Reset fade
+    effectFadeLatch = true;
     leds_ChaosHSV[0] = CHSV(random8(), random8(whiteSatmax), random8(whiteValmin, 255));
     for (int i = 301; i > 0; i--) {
       leds_ChaosHSV[i] = leds_ChaosHSV[(i - 1)];
@@ -603,10 +579,10 @@ void hueTrain() {
   if (hueTrainRan == false) {
     for (int i = 0; i < (NUM_LEDS + 2); i++) {
       leds_ChaosHSV[i] = CHSV(random8(), random8(whiteSatmax), random8(whiteValmin, 255));
-      
+
     }
     for (int i = NUM_LEDS; i > 0; i--) {
-      leds[i] = leds_ChaosHSV[i];
+      leds_Base[i] = leds_ChaosHSV[i];
     }
     hueTrainRan = true;
     fade = 0;
@@ -621,15 +597,15 @@ void hueTrain() {
 
 
   // Update each LED to be a fade between two values
-  for (int i = 0; i < 300; i++) {
-    leds[i] = blend(leds_ChaosHSV[(i + 2)], leds_ChaosHSV[(i + 1)], ease8InOutQuad(fade));
+  for (int i = 0; i < NUM_LEDS; i++) {
+    leds_Base[i] = blend(leds_ChaosHSV[(i + 2)], leds_ChaosHSV[(i + 1)], ease8InOutQuad(fade));
   }
 
 
   // When fade is 100%
   if (fade == 255) {
     fade = 0; // Reset fade
-
+    effectFadeLatch = true;
     // Create a new random value for the first entry
     leds_ChaosHSV[0] = CHSV(random8(HueMin, HueMax), random8(SatMin, SatMax), random8(BriMin, BriMax));
 
@@ -651,13 +627,14 @@ void hsvGradient () {
   }
 
 
-  fill_gradient(leds, 0, blend(gradBottomA, gradBottomB, ease8InOutQuad(fade)), NUM_LEDS, blend(gradTopA, gradTopB, ease8InOutQuad(fade)), FORWARD_HUES);
+  fill_gradient(leds_Base, 0, blend(gradBottomA, gradBottomB, ease8InOutQuad(fade)), NUM_LEDS, blend(gradTopA, gradTopB, ease8InOutQuad(fade)), FORWARD_HUES);
 
 
 
   if (fade == 255) {
     fade = 0;
-
+    effectFadeLatch = true;
+    
     gradBottomA = gradBottomB;
     gradBottomB = CHSV(random8(), random8(128, 255), 255);
 
@@ -667,39 +644,84 @@ void hsvGradient () {
   }
 }
 
-
+// This is a test loop for determining which
 void ledSelect () {
   if (ledSelectRan == false) {
     topKnob.write(0);
     ledSelectRan = true;
-    fill_solid(leds, 300, CRGB::Black);
+    fill_solid(leds, NUM_LEDS, CRGB::Black);
   }
-  
-  
-  
-  leds[(topKnob.read()/4)] = CHSV(random8(), random8(128, 255), 255);
+  leds[(topKnob.read() / 4)] = CHSV(random8(), random8(128, 255), 255);
   display.clearDisplay();
   display.display();
   display.setCursor(0, 0);            // Start at top-left corner
   display.print("Number:");
   display.setCursor(70, 0);
-  display.print((topKnob.read()/4));
+  display.print((topKnob.read() / 4));
   display.display();
-  
+
 }
 
 
+//
+// /$$$$$$$$ /$$$$$$$$ /$$$$$$$$ /$$$$$$$$  /$$$$$$  /$$$$$$$$ /$$$$$$
+//| $$_____/| $$_____/| $$_____/| $$_____/ /$$__  $$|__  $$__//$$__  $$
+//| $$      | $$      | $$      | $$      | $$  \__/   | $$  | $$  \__/
+//| $$$$$   | $$$$$   | $$$$$   | $$$$$   | $$         | $$  |  $$$$$$
+//| $$__/   | $$__/   | $$__/   | $$__/   | $$         | $$   \____  $$
+//| $$      | $$      | $$      | $$      | $$    $$   | $$   /$$  \ $$
+//| $$$$$$$$| $$      | $$      | $$$$$$$$|  $$$$$$/   | $$  |  $$$$$$/
+//|________/|__/      |__/      |________/ \______/    |__/   \______/
+//
 
+void hueTrainEffect() {
+
+
+  // Update each LED to be a fade between two values
+  for (int i = 0; i < NUM_LEDS; i++) {
+    leds_Effects[i] = blend(leds_ChaosHSV[(i + 2)], leds_ChaosHSV[(i + 1)], ease8InOutQuad(fade));
+  }
+  // When fade is 100%
+  if (effectFadeLatch == true) {
+    effectFadeLatch = false;
+    // Create a new random value for the first entry
+    leds_ChaosHSV[0] = CHSV(random8(), random8(), random8());
+    // Move values over one
+    for (int i = (NUM_LEDS + 1); i > 0; i--) {
+      leds_ChaosHSV[i] = leds_ChaosHSV[(i - 1)];
+    }
+  }
+}
+
+void affect() {
+  for (int i = 0; i < NUM_LEDS; i++) {
+    leds[i] = blend(leds_Base[i], leds_Effects[i], 64);
+  }
+}
+
+
+//
+// /$$        /$$$$$$   /$$$$$$  /$$$$$$$
+//| $$       /$$__  $$ /$$__  $$| $$__  $$
+//| $$      | $$  \ $$| $$  \ $$| $$  \ $$
+//| $$      | $$  | $$| $$  | $$| $$$$$$$/
+//| $$      | $$  | $$| $$  | $$| $$____/
+//| $$      | $$  | $$| $$  | $$| $$
+//| $$$$$$$$|  $$$$$$/|  $$$$$$/| $$
+//|________/ \______/  \______/ |__/
+//
 
 void (*modeSelect[])() = { rgbGradient, hsvGradient, whiteTrain, colorDrops, train, hueTrain, colorDrops } ;
 
 void loop() {
-  
+
   inputs();
   settings();
   oled();
-  timerUpdates();
   if (paused == false) {
     (*modeSelect[(aMode % modes)])();
   }
+  hueTrainEffect();
+  affect();
+  timerUpdates();
 }
